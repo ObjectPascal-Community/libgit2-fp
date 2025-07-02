@@ -19,6 +19,12 @@ const
 
 	{$I git2/stdint.inc}
 
+type
+	size_t  = uintptr_t;
+	ssize_t = intptr_t;
+
+	{$I git2/common.inc}
+
 
 implementation
 

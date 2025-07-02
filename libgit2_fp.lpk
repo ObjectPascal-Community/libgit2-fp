@@ -21,7 +21,13 @@
         <Filename Value="git2\stdint.inc"/>
         <Type Value="Include"/>
       </Item>
+      <Item>
+        <Filename Value="git2\common.inc"/>
+        <Type Value="Include"/>
+        <AddToUsesPkgSection Value="True"/>
+      </Item>
     </Files>
+    <LazDoc Paths="docs"/>
     <RequiredPkgs>
       <Item>
         <PackageName Value="FCL"/>
