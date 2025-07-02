@@ -23,9 +23,15 @@ type
 	size_t  = uintptr_t;
 	ssize_t = intptr_t;
 
+	{$I git2/version.inc}
 	{$I git2/common.inc}
 
 
 implementation
+
+function LIBGIT2_VERSION_CHECK(major, minor, revision: Integer): Boolean;
+begin
+	Result := (LIBGIT2_VERSION_NUMBER >= major * 1000000 + minor * 10000 + revision * 100);
+end;
 
 end.

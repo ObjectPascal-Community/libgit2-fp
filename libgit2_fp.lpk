@@ -26,6 +26,11 @@
         <Type Value="Include"/>
         <AddToUsesPkgSection Value="True"/>
       </Item>
+      <Item>
+        <Filename Value="git2\version.inc"/>
+        <Type Value="Include"/>
+        <AddToUsesPkgSection Value="True"/>
+      </Item>
     </Files>
     <LazDoc Paths="docs"/>
     <RequiredPkgs>
