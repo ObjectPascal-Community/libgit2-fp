@@ -65,6 +65,9 @@ type
 	intptr_t  = {$IFDEF CPU64}cint64{$ELSE}cint32{$ENDIF};
 	uintptr_t = {$IFDEF CPU64}cuint64{$ELSE}cuint32{$ENDIF};
 
+	size_t  = uintptr_t;
+	ssize_t = intptr_t;
+
 (*
  * 7.18.1.5 Greatest-width integer types
  *)

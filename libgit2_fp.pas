@@ -8,7 +8,8 @@ Unit libgit2_fp;
 Interface
 
 uses
-      LibGit2, LibGit2.Common, LibGit2.StdInt, LibGit2.Version, LibGit2.Platform, LazarusPackageIntf;
+      LibGit2, LibGit2.Common, LibGit2.StdInt, LibGit2.Version, LibGit2.Platform, LibGit2.Buffer, LibGit2.Alloc, 
+      LibGit2.StrArray, LazarusPackageIntf;
 
 Implementation
 

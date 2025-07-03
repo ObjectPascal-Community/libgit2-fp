@@ -31,7 +31,19 @@
       </Item>
       <Item>
         <Filename Value="libgit2.platform.pas"/>
-        <UnitName Value="libgit2.platform"/>
+        <UnitName Value="LibGit2.Platform"/>
+      </Item>
+      <Item>
+        <Filename Value="libgit2.buffer.pas"/>
+        <UnitName Value="LibGit2.Buffer"/>
+      </Item>
+      <Item>
+        <Filename Value="libgit2.alloc.pas"/>
+        <UnitName Value="LibGit2.Alloc"/>
+      </Item>
+      <Item>
+        <Filename Value="libgit2.strarray.pas"/>
+        <UnitName Value="libgit2.strarray"/>
       </Item>
     </Files>
     <LazDoc Paths="docs"/>
