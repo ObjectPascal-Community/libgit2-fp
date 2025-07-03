@@ -133,13 +133,13 @@ type
 
 	TGitTime = record
 		Time:	TGitTimestamp;
-		Offset: cint;
-		Sign:	Ansichar;
+		Offset: CInt;
+		Sign:	CChar;
 	end;
 
 	TGitSignature = record
-		Name:  Pansichar;
-		Email: Pansichar;
+		Name:  PCChar;
+		Email: PCChar;
 		When:  TGitTime;
 	end;
 
@@ -245,9 +245,9 @@ type
 
 	PGitWriteStream = ^TGitWriteStream;
 
-	TGitWritestreamWriteFunc = function(stream: PGitWriteStream; const buffer: Pansichar; len: size_t): cint; cdecl;
-	TGitWritestreamCloseFunc = function(stream: PGitWriteStream): cint; cdecl;
-	TGitWritestreamFreeFunc = procedure(stream: PGitWriteStream); cdecl;
+	TGitWritestreamWriteFunc = function(Stream: PGitWriteStream; const Buffer: PCChar; Length: size_t): CInt; cdecl;
+	TGitWritestreamCloseFunc = function(Stream: PGitWriteStream): CInt; cdecl;
+	TGitWritestreamFreeFunc = procedure(Stream: PGitWriteStream); cdecl;
 
 	TGitWriteStream = record
 		WriteFunc: TGitWritestreamWriteFunc;
