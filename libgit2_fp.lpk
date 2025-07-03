@@ -8,33 +8,30 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <IncludeFiles Value="git2"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
+    <Version Major="1" Minor="9" Release="1"/>
     <Files>
       <Item>
         <Filename Value="libgit2.pas"/>
-        <UnitName Value="libgit2"/>
+        <UnitName Value="LibGit2"/>
       </Item>
       <Item>
-        <Filename Value="git2\stdint.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="libgit2.common.pas"/>
+        <UnitName Value="LibGit2.Common"/>
       </Item>
       <Item>
-        <Filename Value="git2\common.inc"/>
-        <Type Value="Include"/>
-        <AddToUsesPkgSection Value="True"/>
+        <Filename Value="libgit2.stdint.pas"/>
+        <UnitName Value="LibGit2.StdInt"/>
       </Item>
       <Item>
-        <Filename Value="git2\version.inc"/>
-        <Type Value="Include"/>
-        <AddToUsesPkgSection Value="True"/>
+        <Filename Value="libgit2.version.pas"/>
+        <UnitName Value="LibGit2.Version"/>
       </Item>
       <Item>
-        <Filename Value="git2\types.inc"/>
-        <Type Value="Include"/>
-        <AddToUsesPkgSection Value="True"/>
+        <Filename Value="libgit2.platform.pas"/>
+        <UnitName Value="libgit2.platform"/>
       </Item>
     </Files>
     <LazDoc Paths="docs"/>
