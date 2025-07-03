@@ -44,6 +44,8 @@ function HasCompressionSupport: Boolean;
 function HasSHA1ObjectSupport: Boolean;
 function HasSHA256ObjectSupport: Boolean;
 
+function GetFeatureBackend(const feature: TGitFeature): String;
+
 implementation
 
 var
@@ -54,6 +56,8 @@ function Libgit2GetVersion(Major, Minor, rev: PInteger): Integer;
 	cdecl; external LibGit2Dll name 'git_libgit2_version';
 function Libgit2GetPrerelease: Pansichar; cdecl; external LibGit2Dll name 'git_libgit2_prerelease';
 function Libgit2Features: Integer; cdecl; external LibGit2Dll name 'git_libgit2_features';
+function Libgit2FeatureBackend(feature: Integer): Pansichar;
+	cdecl; external LibGit2Dll name 'git_libgit2_feature_backend';
 
 function GetVersion: TGitVersion;
 begin
@@ -159,6 +163,21 @@ end;
 function HasSHA256ObjectSupport: Boolean;
 begin
 	Result := HasFeature(TGitFeature.SHA256);
+end;
+
+function GetFeatureBackend(const feature: TGitFeature): String;
+var
+	raw: Pansichar;
+begin
+	raw := Libgit2FeatureBackend(1 shl Ord(feature));
+	if raw = nil then
+	begin
+		Result := '';
+	end
+	else
+	begin
+		Result := String(raw);
+	end;
 end;
 
 end.
