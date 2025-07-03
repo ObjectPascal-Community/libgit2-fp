@@ -1,6 +1,6 @@
 unit LibGit2;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$scopedenums on}
 
 interface
 
@@ -25,11 +25,11 @@ type
 
 	{$I git2/version.inc}
 	{$I git2/common.inc}
-
+	{$I git2/types.inc}
 
 implementation
 
-function LIBGIT2_VERSION_CHECK(major, minor, revision: Integer): Boolean;
+function Libgit2VersionCheck(major, minor, revision: Integer): Boolean;
 begin
 	Result := (LIBGIT2_VERSION_NUMBER >= major * 1000000 + minor * 10000 + revision * 100);
 end;

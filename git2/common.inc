@@ -7,12 +7,13 @@ const
 
 	GIT_PATH_MAX = 4096;
 
-function git_libgit2_version(major, minor, rev: PCInt): CInt; cdecl; external LibGit2Dll;
-function git_libgit2_prerelease: PCChar; cdecl; external LibGit2Dll;
-
 type
-	git_feature_t = CInt;
+	TGitFeature = CInt;
+	TGitOption  = CInt;
 
-function git_libgit2_features: CInt; cdecl; external LibGit2Dll;
-function git_libgit2_feature_backend(feature: git_feature_t): PCChar; cdecl; external LibGit2Dll;
-function git_libgit2_opts(option: CInt): Integer; cdecl; varargs; external LibGit2Dll;
+function Libgit2Version(out major, minor, rev: PCInt): CInt; cdecl; external LibGit2Dll name 'git_libgit2_version';
+function Libgit2Prerelease: PCChar; cdecl; external LibGit2Dll name 'git_libgit2_prerelease';
+function Libgit2Features: CInt; cdecl; external LibGit2Dll name 'git_libgit2_features';
+function Libgit2FeatureBackend(feature: TGitFeature): PCChar; cdecl;
+	external LibGit2Dll name 'git_libgit2_feature_backend';
+function Libgit2Opts(option: TGitOption): Integer; cdecl; varargs; external LibGit2Dll name 'git_libgit2_opts';

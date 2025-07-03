@@ -12,4 +12,4 @@ const
 	LIBGIT2_VERSION_NUMBER =
 		(LIBGIT2_VERSION_MAJOR * 1000000) + (LIBGIT2_VERSION_MINOR * 10000) + (LIBGIT2_VERSION_REVISION * 100);
 
-function LIBGIT2_VERSION_CHECK(major, minor, revision: Integer): Boolean;
+function Libgit2VersionCheck(major, minor, revision: Integer): Boolean;
