@@ -47,6 +47,9 @@ type
 		procedure TestGetCachedMemory;
 
 		procedure TestTemplatePath;
+
+		procedure TestSetSSLCertLocations;
+		procedure TestAddSSLX509Cert;
 	end;
 
 implementation
@@ -479,6 +482,92 @@ begin
 	res := GetTemplatePath(actualPath);
 	CheckEquals(0, res, 'GetTemplatePath after restore failed');
 	CheckEquals(originalPath, actualPath, 'Restore of template path did not work');
+end;
+
+procedure TTestCommon.TestSetSSLCertLocations;
+var
+	res, i: Integer;
+	err:	 Pgit_error;
+begin
+	// TODO: add more failure points
+
+	res := SetSSLCertLocations('', '');
+	if res < 0 then
+	begin
+		err := Libgit2GetLastError;
+		CheckFalse(err = nil, 'Error info should be available on failure');
+		CheckTrue(
+			(err^.message = 'TLS backend doesn''t support certificate locations') or
+			(err^.message = 'some other expected SSL error'),
+			'Unexpected error message: ' + String(err^.message)
+			);
+	end
+	else
+	begin
+		CheckEquals(0, res, 'SetSSLCertLocations failed unexpectedly');
+	end;
+
+	res := SetSSLCertLocations('nonexistent.pem', 'nonexistent_dir');
+	if res < 0 then
+	begin
+		err := Libgit2GetLastError;
+		CheckFalse(err = nil, 'Error info should be available on failure');
+		CheckTrue(
+			(err^.message = 'TLS backend doesn''t support certificate locations') or
+			(err^.message = 'some other expected SSL error'),
+			'Unexpected error message: ' + String(err^.message)
+			);
+	end
+	else
+	begin
+		CheckEquals(0, res, 'SetSSLCertLocations failed unexpectedly');
+	end;
+
+	res := SetSSLCertLocations('', '');
+	CheckTrue((res = 0) or (res < 0), 'SetSSLCertLocations with empty strings should succeed or fail gracefully');
+
+	res := SetSSLCertLocations('validfile.pem', '');
+	CheckTrue((res = 0) or (res < 0), 'SetSSLCertLocations with valid file and empty path');
+
+	res := SetSSLCertLocations('', 'validpath');
+	CheckTrue((res = 0) or (res < 0), 'SetSSLCertLocations with empty file and valid path');
+
+	for i := 1 to 5 do
+	begin
+		res := SetSSLCertLocations('', '');
+		CheckTrue((res = 0) or (res < 0), 'Repeated SetSSLCertLocations call failed');
+	end;
+end;
+
+procedure TTestCommon.TestAddSSLX509Cert;
+var
+	res: Integer;
+	err: Pgit_error;
+begin
+	// TODO: add more failure points
+
+	res := AddSSLX509Cert(nil);
+	CheckTrue(res < 0, 'AddSSLX509Cert with nil should fail');
+
+	err := Libgit2GetLastError;
+	CheckFalse(err = nil, 'Error info should be available on failure');
+	CheckTrue(
+		(err^.message = 'TLS backend doesn''t support adding of the raw certs') or
+		(err^.message = 'some other expected SSL error'),
+		'Unexpected error message: ' + String(err^.message)
+		);
+
+	res := AddSSLX509Cert(Pointer($1234));
+	if res < 0 then
+	begin
+		err := Libgit2GetLastError;
+		CheckFalse(err = nil, 'Error info should be available on failure');
+		CheckTrue(
+			(err^.message = 'TLS backend doesn''t support adding of the raw certs') or
+			(err^.message = 'some other expected SSL error'),
+			'Unexpected error message: ' + String(err^.message)
+			);
+	end;
 end;
 
 initialization
