@@ -18,10 +18,10 @@ uses
 type
 
 	TTestCommon = class(TTestCase)
-	published
+	protected
 		procedure SetUp; override;
 		procedure TearDown; override;
-
+	published
 		procedure TestVersion;
 		procedure TestCheckIfNotEmptyFeatureSet;
 		procedure TestCheckIfAlwaysAvailableFeaturesExist;
@@ -57,6 +57,8 @@ type
 
 		procedure TestSetGetUserAgentProduct;
 		procedure TestSetGetUserAgentProductUnicode;
+
+		procedure TestAllFeatureToggles;
 	end;
 
 implementation
@@ -739,6 +741,48 @@ begin
 	CheckEquals(0, res, 'GetUserAgentProduct after empty string failed');
 	CheckEquals('git/2.0', getProduct, 'GetUserAgentProduct after empty string did not return default');
 end;
+
+type
+	TFeatureToggle = record
+		Name: String;
+		EnableProc: procedure;
+		DisableProc: procedure;
+		IsEnabledFunc: function: Boolean;
+	end;
+
+
+procedure TTestCommon.TestAllFeatureToggles;
+const
+	FeatureToggles: array[0..7] of TFeatureToggle = (
+		(Name: 'StrictObjectCreation'; EnableProc: @EnableStrictObjectCreation; DisableProc: @DisableStrictObjectCreation;
+		IsEnabledFunc: @IsStrictObjectCreationEnabled),
+		(Name: 'StrictSymbolicRefCreation'; EnableProc: @EnableStrictSymbolicRefCreation;
+		DisableProc: @DisableStrictSymbolicRefCreation; IsEnabledFunc: @IsStrictSymbolicRefCreationEnabled),
+		(Name: 'OfsDelta'; EnableProc: @EnableOfsDelta; DisableProc: @DisableOfsDelta; IsEnabledFunc: @IsOfsDeltaEnabled),
+		(Name: 'FSyncGitdir'; EnableProc: @EnableFSyncGitdir; DisableProc: @DisableFSyncGitdir;
+		IsEnabledFunc: @IsFSyncGitdirEnabled),
+		(Name: 'StrictHashVerification'; EnableProc: @EnableStrictHashVerification;
+		DisableProc: @DisableStrictHashVerification; IsEnabledFunc: @IsStrictHashVerificationEnabled),
+		(Name: 'UnsavedIndexSafety'; EnableProc: @EnableUnsavedIndexSafety; DisableProc: @DisableUnsavedIndexSafety;
+		IsEnabledFunc: @IsUnsavedIndexSafetyEnabled),
+		(Name: 'PackKeepFileChecks'; EnableProc: @DisablePackKeepFileChecks; DisableProc: @EnablePackKeepFileChecks;
+		IsEnabledFunc: @IsPackKeepFileChecksDisabled), // note inverse logic
+		(Name: 'HttpExpectContinue'; EnableProc: @EnableHttpExpectContinue; DisableProc: @DisableHttpExpectContinue;
+		IsEnabledFunc: @IsHttpExpectContinueEnabled)
+		);
+var
+	toggle: TFeatureToggle;
+begin
+	for toggle in FeatureToggles do
+	begin
+		toggle.DisableProc;
+		CheckFalse(toggle.IsEnabledFunc(), toggle.Name + ' should be disabled');
+
+		toggle.EnableProc;
+		CheckTrue(toggle.IsEnabledFunc(), toggle.Name + ' should be enabled');
+	end;
+end;
+
 
 initialization
 	RegisterTest(TTestCommon);

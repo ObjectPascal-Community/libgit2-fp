@@ -122,27 +122,36 @@ procedure SetSSLCiphers(const ciphers: String);
 
 procedure EnableStrictObjectCreation;
 procedure DisableStrictObjectCreation;
+function IsStrictObjectCreationEnabled: Boolean;
 
 procedure EnableStrictSymbolicRefCreation;
 procedure DisableStrictSymbolicRefCreation;
+function IsStrictSymbolicRefCreationEnabled: Boolean;
 
 procedure EnableOfsDelta;
 procedure DisableOfsDelta;
+function IsOfsDeltaEnabled: Boolean;
 
 procedure EnableFSyncGitdir;
 procedure DisableFSyncGitdir;
+function IsFSyncGitdirEnabled: Boolean;
 
 procedure EnableStrictHashVerification;
 procedure DisableStrictHashVerification;
+function IsStrictHashVerificationEnabled: Boolean;
 
 procedure EnableUnsavedIndexSafety;
 procedure DisableUnsavedIndexSafety;
+function IsUnsavedIndexSafetyEnabled: Boolean;
 
 procedure EnablePackKeepFileChecks;
 procedure DisablePackKeepFileChecks;
+function IsPackKeepFileChecksDisabled: Boolean;
 
 procedure EnableHttpExpectContinue;
 procedure DisableHttpExpectContinue;
+function IsHttpExpectContinueEnabled: Boolean;
+
 
 function GetPackMaxObjects: size_t;
 procedure SetPackMaxObjects(const objects: size_t);
@@ -474,7 +483,6 @@ begin
 		CacheMaxSize := MaxStorageBytes;
 	end;
 end;
-
 
 function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
 begin
@@ -817,6 +825,47 @@ end;
 procedure DisableHttpExpectContinue;
 begin
 	EnableHttpExpectContinueInternal(False);
+end;
+
+
+function IsStrictObjectCreationEnabled: Boolean;
+begin
+	Result := StrictObjectCreationEnabled;
+end;
+
+function IsStrictSymbolicRefCreationEnabled: Boolean;
+begin
+	Result := StrictSymbolicRefCreationEnabled;
+end;
+
+function IsOfsDeltaEnabled: Boolean;
+begin
+	Result := OfsDeltaEnabled;
+end;
+
+function IsFSyncGitdirEnabled: Boolean;
+begin
+	Result := FSyncGitdirEnabled;
+end;
+
+function IsStrictHashVerificationEnabled: Boolean;
+begin
+	Result := StrictHashVerificationEnabled;
+end;
+
+function IsUnsavedIndexSafetyEnabled: Boolean;
+begin
+	Result := UnsavedIndexSafetyEnabled;
+end;
+
+function IsPackKeepFileChecksDisabled: Boolean;
+begin
+	Result := PackKeepFileChecksDisabled;
+end;
+
+function IsHttpExpectContinueEnabled: Boolean;
+begin
+	Result := HttpExpectContinueEnabled;
 end;
 
 
