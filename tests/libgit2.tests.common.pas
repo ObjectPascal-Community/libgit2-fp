@@ -362,31 +362,6 @@ procedure TTestCommon.TestGetSetResetSearchPath;
 const
 	TestBasePath = 'test_path';
 
-	function JoinPaths(const Paths: array of String): String;
-	var
-		sb: TStringBuilder;
-		i:  Integer;
-	begin
-		sb := TStringBuilder.Create;
-		try
-			for i := Low(Paths) to High(Paths) do
-			begin
-				if Paths[i] = '' then
-				begin
-					Continue;
-				end;
-				if sb.Length > 0 then
-				begin
-					sb.Append(PathSeparator);
-				end;
-				sb.Append(Paths[i]);
-			end;
-			Result := sb.ToString;
-		finally
-			sb.Free;
-		end;
-	end;
-
 	procedure CheckLibgit2(ResultCode: Integer; const Msg: String);
 	var
 		err: Pgit_error;
@@ -409,34 +384,24 @@ const
 	var
 		levelName: String;
 		originalPath, testPath, appendedPath, actualPath: String;
-		res: Integer;
 	begin
 		levelName := GetEnumName(TypeInfo(TGitConfigLevel), Ord(level));
 		testPath  := Format('%s_%d', [TestBasePath, Ord(level)]);
 
-		res := GetSearchPath(level, originalPath);
-		CheckLibgit2(res, Format('[%s] GetSearchPath (original)', [levelName]));
+		CheckLibgit2(GetSearchPath(level, originalPath), Format('[%s] GetSearchPath (original)', [levelName]));
+		CheckLibgit2(SetSearchPath(level, testPath), Format('[%s] SetSearchPath', [levelName]));
 
-		res := SetSearchPath(level, testPath);
-		CheckLibgit2(res, Format('[%s] SetSearchPath', [levelName]));
-
-		res := GetSearchPath(level, actualPath);
-		CheckLibgit2(res, Format('[%s] GetSearchPath (after set)', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after set)', [levelName]));
 		CheckEquals(testPath, actualPath, Format('[%s] Set path mismatch', [levelName]));
 
-		appendedPath := JoinPaths([actualPath, testPath]);
-		res := SetSearchPath(level, appendedPath);
-		CheckLibgit2(res, Format('[%s] SetSearchPath (append)', [levelName]));
+		appendedPath := actualPath + PathSeparator + testPath;
+		CheckLibgit2(SetSearchPath(level, appendedPath), Format('[%s] SetSearchPath (append)', [levelName]));
 
-		res := GetSearchPath(level, actualPath);
-		CheckLibgit2(res, Format('[%s] GetSearchPath (after append)', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after append)', [levelName]));
 		CheckEquals(appendedPath, actualPath, Format('[%s] Appended path mismatch', [levelName]));
 
-		res := ResetSearchPath(level);
-		CheckLibgit2(res, Format('[%s] ResetSearchPath', [levelName]));
-
-		res := GetSearchPath(level, actualPath);
-		CheckLibgit2(res, Format('[%s] GetSearchPath (after reset)', [levelName]));
+		CheckLibgit2(ResetSearchPath(level), Format('[%s] ResetSearchPath', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after reset)', [levelName]));
 
 		if level <> TGitConfigLevel.System then
 		begin
@@ -445,13 +410,14 @@ const
 	end;
 
 var
-	i: Integer;
+	level: TGitConfigLevel;
 begin
-	for i := Ord(TGitConfigLevel.ProgramData) to Ord(TGitConfigLevel.Global) do
+	for level in [TGitConfigLevel.ProgramData .. TGitConfigLevel.Global] do
 	begin
-		TestLevelPath(TGitConfigLevel(i));
+		TestLevelPath(level);
 	end;
 end;
+
 
 procedure TTestCommon.TestCacheObjectMaxSize;
 var
