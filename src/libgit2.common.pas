@@ -492,30 +492,33 @@ var
 	Buffer: TGitBuf;
 begin
 	Buffer := GitInitBuf;
-	FillChar(Buffer, SizeOf(Buffer), 0);
-
 	Result := Libgit2Opts(Ord(TGitOption.GetTemplatePath), @Buffer);
-	if Result = 0 then
+	if Result <> 0 then
 	begin
+		path := '';
+		Exit;
+	end;
+
+	try
 		if Buffer.Ptr <> nil then
 		begin
-			path := String(Ansistring(Buffer.Ptr));
+			path := UTF8ToString(Buffer.Ptr);
 		end
 		else
 		begin
 			path := '';
 		end;
+	finally
 		DisposeBuffer(Buffer);
-	end
-	else
-	begin
-		path := '';
 	end;
 end;
 
 function SetTemplatePath(const path: String): Integer;
+var
+	Utf8Path: Utf8string;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetTemplatePath), Pansichar(Ansistring(path)));
+	Utf8Path := UTF8Encode(path);
+	Result	:= Libgit2Opts(Ord(TGitOption.SetTemplatePath), Pansichar(Utf8Path));
 end;
 
 function SetSSLCertLocations(const filename, path: String): Integer;
@@ -708,7 +711,7 @@ end;
 
 function SetExtensions(const extensions: TStringArray): Integer;
 var
-	UTF8Strings: specialize TArray<Utf8string>;
+	UTF8Strings: array of Utf8string;
 	CExtensions: array of Pansichar;
 	i: Integer;
 begin
