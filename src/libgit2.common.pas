@@ -656,44 +656,87 @@ begin
 	Libgit2Opts(Ord(TGitOption.SetSSLCiphers), Pansichar(Ansistring(ciphers)));
 end;
 
+var
+	StrictObjectCreationEnabled: Boolean = False;
+	StrictSymbolicRefCreationEnabled: Boolean = False;
+	OfsDeltaEnabled:	 Boolean = False;
+	FSyncGitdirEnabled: Boolean = False;
+	StrictHashVerificationEnabled: Boolean = False;
+	UnsavedIndexSafetyEnabled: Boolean = False;
+	PackKeepFileChecksDisabled: Boolean = False;
+	HttpExpectContinueEnabled: Boolean = False;
+
 procedure EnableStrictObjectCreationInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableStrictObjectCreation), Ord(Enabled));
+	if StrictObjectCreationEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableStrictObjectCreation), Ord(Enabled));
+		StrictObjectCreationEnabled := Enabled;
+	end;
 end;
+
 
 procedure EnableStrictSymbolicRefCreationInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableStrictSymbolicRefCreation), Ord(Enabled));
+	if StrictSymbolicRefCreationEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableStrictSymbolicRefCreation), Ord(Enabled));
+		StrictSymbolicRefCreationEnabled := Enabled;
+	end;
 end;
 
 procedure EnableOfsDeltaInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableOfsDelta), Ord(Enabled));
+	if OfsDeltaEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableOfsDelta), Ord(Enabled));
+		OfsDeltaEnabled := Enabled;
+	end;
 end;
 
 procedure EnableFSyncGitdirInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableFSyncGitdir), Ord(Enabled));
+	if FSyncGitdirEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableFSyncGitdir), Ord(Enabled));
+		FSyncGitdirEnabled := Enabled;
+	end;
 end;
 
 procedure EnableStrictHashVerificationInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableStrictHashVerification), Ord(Enabled));
+	if StrictHashVerificationEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableStrictHashVerification), Ord(Enabled));
+		StrictHashVerificationEnabled := Enabled;
+	end;
 end;
 
 procedure EnableUnsavedIndexSafetyInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableUnsavedIndexSafety), Ord(Enabled));
+	if UnsavedIndexSafetyEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableUnsavedIndexSafety), Ord(Enabled));
+		UnsavedIndexSafetyEnabled := Enabled;
+	end;
 end;
 
 procedure DisablePackKeepFileChecksInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.DisablePackKeepFileChecks), Ord(Enabled));
+	if PackKeepFileChecksDisabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.DisablePackKeepFileChecks), Ord(Enabled));
+		PackKeepFileChecksDisabled := Enabled;
+	end;
 end;
 
 procedure EnableHttpExpectContinueInternal(const Enabled: Boolean);
 begin
-	Libgit2Opts(Ord(TGitOption.EnableHttpExpectContinue), Ord(Enabled));
+	if HttpExpectContinueEnabled <> Enabled then
+	begin
+		Libgit2Opts(Ord(TGitOption.EnableHttpExpectContinue), Ord(Enabled));
+		HttpExpectContinueEnabled := Enabled;
+	end;
 end;
 
 procedure EnableStrictObjectCreation;
