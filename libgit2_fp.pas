@@ -2,20 +2,21 @@
   This source is only used to compile and install the package.
  }
 
-Unit libgit2_fp;
+unit libgit2_fp;
 
 {$warn 5023 off : no warning about unused units}
-Interface
+interface
 
 uses
-      LibGit2, LazarusPackageIntf;
+      LibGit2, LibGit2.Alloc, LibGit2.Buffer, LibGit2.Common, LibGit2.StdInt, LibGit2.StrArray, LibGit2.Version, 
+      LibGit2.Platform, LazarusPackageIntf;
 
-Implementation
+implementation
 
-Procedure Register;
-Begin
-End;
+procedure Register;
+begin
+end;
 
-Initialization
+initialization
   RegisterPackage('libgit2_fp', @Register);
-End.
+end.

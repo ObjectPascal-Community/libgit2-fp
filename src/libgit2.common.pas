@@ -61,28 +61,31 @@ procedure SetMaximumWindowFileLimit(const size: size_t);
 type
 	TGitConfigLevel = (
 		HighestLevel = -1,
-		ProgramData = 1,
-		System = 2,
-		XDG = 3,
-		Global = 4,
-		Local = 5,
-		Worktree = 6,
-		App = 7
+		EnumPadding,
+		ProgramData,
+		System,
+		XDG,
+		Global,
+		Local,
+		Worktree,
+		App
 		);
 
 function GetSearchPath(const level: TGitConfigLevel; out path: String): Integer;
 function SetSearchPath(const level: TGitConfigLevel; const path: String): Integer;
+function ResetSearchPath(const level: TGitConfigLevel): Integer;
 
 type
 	TGitObjectType = (
 		Any = -2,
-		Invalid = -1,
-		Commit = 1,
-		Tree = 2,
-		Blob = 3,
-		Tag = 4,
-		OffsetDelta = 6,
-		RefDelta = 7
+		Invalid,
+		EnumPadding,
+		Commit,
+		Tree,
+		Blob,
+		Tag,
+		OffsetDelta,
+		RefDelta
 		);
 
 function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Integer;
@@ -396,6 +399,11 @@ begin
 	Result := Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), Pansichar(UTF8Encode(path)));
 end;
 
+function ResetSearchPath(const level: TGitConfigLevel): Integer;
+begin
+	Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), nil);
+end;
+
 function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Integer;
 begin
 	Result := Libgit2Opts(Ord(TGitOption.SetCacheObjectLimit), Ord(ObjectType), CacheSize);
@@ -460,10 +468,10 @@ end;
 
 function SetUserAgent(const userAgent: String): Integer;
 var
-  ansiUserAgent: AnsiString;
+	ansiUserAgent: Ansistring;
 begin
-  ansiUserAgent := AnsiString(userAgent);
-  Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), PAnsiChar(ansiUserAgent));
+	ansiUserAgent := Ansistring(userAgent);
+	Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), Pansichar(ansiUserAgent));
 end;
 
 function GetUserAgent(out userAgent: String): Integer;
@@ -476,7 +484,7 @@ begin
 	begin
 		if Buffer.Ptr <> nil then
 		begin
-			userAgent := String(AnsiString(Buffer.Ptr));
+			userAgent := String(Ansistring(Buffer.Ptr));
 		end
 		else
 		begin

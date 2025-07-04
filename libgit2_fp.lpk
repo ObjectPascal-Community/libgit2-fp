@@ -8,6 +8,7 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
+        <OtherUnitFiles Value="src"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
@@ -19,38 +20,31 @@
       </Item>
       <Item>
         <Filename Value="src\libgit2.alloc.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.Alloc"/>
       </Item>
       <Item>
         <Filename Value="src\libgit2.buffer.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.Buffer"/>
       </Item>
       <Item>
         <Filename Value="src\libgit2.common.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.Common"/>
       </Item>
       <Item>
-        <Filename Value="src\libgit2.platform.pas"/>
-        <AddToUsesPkgSection Value="False"/>
-        <UnitName Value="LibGit2.Platform"/>
-      </Item>
-      <Item>
         <Filename Value="src\libgit2.stdint.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.StdInt"/>
       </Item>
       <Item>
         <Filename Value="src\libgit2.strarray.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.StrArray"/>
       </Item>
       <Item>
         <Filename Value="src\libgit2.version.pas"/>
-        <AddToUsesPkgSection Value="False"/>
         <UnitName Value="LibGit2.Version"/>
+      </Item>
+      <Item>
+        <Filename Value="src\libgit2.platform.pas"/>
+        <UnitName Value="LibGit2.Platform"/>
       </Item>
     </Files>
     <LazDoc Paths="docs"/>

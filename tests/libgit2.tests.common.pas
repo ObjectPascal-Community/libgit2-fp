@@ -1,0 +1,362 @@
+unit LibGit2.Tests.Common;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+	Classes,
+	fpcunit,
+	typinfo,
+	SysUtils,
+	jsonparser,
+	testregistry,
+	{$IFDEF WINDOWS}
+   Windows,
+	{$ENDIF}
+	LibGit2.Platform,
+	LibGit2.Common,
+	LibGit2.StdInt;
+
+type
+
+	TTestCommon = class(TTestCase)
+	published
+		procedure SetUp; override;
+		procedure TearDown; override;
+
+		procedure TestVersion;
+		procedure TestCheckIfNotEmptyFeatureSet;
+		procedure TestCheckIfAlwaysAvailableFeaturesExist;
+		{$IF DEFINED(WINDOWS) OR DEFINED(MSWINDOWS)}
+		procedure TestCheckIfWindowsFeaturesExist;
+		{$ENDIF}
+		procedure TestCheckIfPrereleaseValid;
+
+		procedure TestCheckGetMaximumWindowSize;
+		procedure TestCheckGetMaximumWindowMappedLimit;
+		procedure TestCheckGetMaximumWindowFileLimit;
+
+		procedure TestCheckSetMaximumWindowSize;
+		procedure TestCheckSetMaximumWindowMappedLimit;
+		procedure TestCheckSetMaximumWindowFileLimit;
+
+		procedure TestGetSetResetSearchPath;
+	end;
+
+implementation
+
+// TODO: move this into the right unit
+function Libgit2Init: Integer; cdecl; external LibGit2Dll name 'git_libgit2_init';
+// TODO: move this into the right unit
+function Libgit2Shutdown: Integer; cdecl; external LibGit2Dll name 'git_libgit2_shutdown';
+
+procedure TTestCommon.SetUp;
+begin
+	inherited SetUp;
+	Libgit2Init;
+end;
+
+procedure TTestCommon.TearDown;
+begin
+	Libgit2Shutdown;
+	inherited TearDown;
+end;
+
+procedure TTestCommon.TestVersion;
+var
+	version: TGitVersion;
+begin
+	version := GetVersion;
+	CheckFalse(version.Major < 0, 'Major version shouldn''t be less than zero');
+	CheckFalse(version.Minor < 0, 'Minor version shouldn''t be less than zero');
+	CheckFalse(version.Revision < 0, 'Revision version shouldn''t be less than zero');
+end;
+
+procedure TTestCommon.TestCheckIfNotEmptyFeatureSet;
+var
+	features: TGitFeatures;
+begin
+	features := GetFeatures;
+	CheckTrue(features <> [], 'Features set shouldn''t be empty.');
+end;
+
+procedure TTestCommon.TestCheckIfAlwaysAvailableFeaturesExist;
+const
+	alwaysPresentFeatures: TGitFeatures = [TGitFeature.HttpParser, TGitFeature.Regex,
+		TGitFeature.Compression, TGitFeature.SHA1];
+var
+	features: TGitFeatures;
+	feature:  TGitFeature;
+begin
+	features := GetFeatures;
+
+	for feature in alwaysPresentFeatures do
+	begin
+		CheckTrue(feature in features,
+			'Missing expected feature: ' + GetEnumName(TypeInfo(TGitFeature), Ord(feature)));
+	end;
+end;
+
+{$IF DEFINED(WINDOWS)}
+procedure TTestCommon.TestCheckIfWindowsFeaturesExist;
+const
+	windowsFeatures: TGitFeatures = [TGitFeature.AuthNegociate, TGitFeature.AuthNTLM];
+var
+	features: TGitFeatures;
+	feature:  TGitFeature;
+begin
+	// According to the libgit2 code, GIT_FEATURE_AUTH_NTLM and GIT_FEATURE_AUTH_NEGOTIATE should be available.
+	features := GetFeatures;
+	for feature in windowsFeatures do
+	begin
+		CheckTrue(feature in features,
+			'Missing Windows feature: ' + GetEnumName(TypeInfo(TGitFeature), Ord(feature)));
+	end;
+end;
+{$ENDIF}
+
+procedure TTestCommon.TestCheckIfPrereleaseValid;
+var
+	PrereleaseString: String;
+begin
+	PrereleaseString := GetPrerelease;
+
+	// In practice, PrereleaseString should be empty, and the last version I saw alpha is 1.8.0.
+	// While comments and commit descriptions indicate beta versions should exist, I haven't seen them through commits,
+	// and the only rc versions were 1.8.2-rc1 and pre-0.28 versions (but then, what are you doing with a version
+	// from pre-2018? I sure hope you are not going to use an ancient DLL.)
+
+	// Still, for the sake of the test, I need to test each possibility.
+	// Abandon all hope, ye who use RC/beta/alpha libgit2 DLLs here.
+	CheckTrue(PrereleaseString.IsEmpty or PrereleaseString.StartsWith('rc') or (PrereleaseString = 'beta') or
+		(PrereleaseString = 'alpha'),
+		'Prerelease string is different from empty (full release), alpha, beta or rc*');
+end;
+
+procedure TTestCommon.TestCheckGetMaximumWindowSize;
+const
+	GB = 1024 * 1024 * 1024;
+	MB = 1024 * 1024;
+var
+	actual, expected: size_t;
+begin
+	{
+         #define DEFAULT_WINDOW_SIZE \
+         (sizeof(void*) >= 8 \
+            ? 1 * 1024 * 1024 * 1024 \
+            : 32 * 1024 * 1024)
+
+   I seriously doubt people are going to change the default, because at that point you know what you are doing.
+   1GB on 64 bits and 32MB on 32 bits is more than enough (and not in a 640K way). If that's not enough, well, use
+   SetMaximumWindowSize. Do **not** even dare to file an issue if you changed any of the constants in mwindow.c at build
+   time.
+   }
+	{$IFDEF CPU64}
+     expected := 1 * GB;
+	{$ELSE}
+	expected := 32 * MB;
+	{$ENDIF}
+
+	actual := GetMaximumWindowSize;
+	CheckEquals(expected, actual,
+		'DEFAULT_WINDOW_SIZE not the same as the expected compile time value. ' +
+		'DEFAULT_WINDOW_SIZE constant changed or running 32 bit DLL on 64 bit.');
+end;
+
+procedure TTestCommon.TestCheckGetMaximumWindowMappedLimit;
+const
+	GB = 1024 * 1024 * 1024;
+	MB = 1024 * 1024;
+var
+	actual, expected: size_t;
+begin
+	{
+         #define DEFAULT_MAPPED_LIMIT \
+                 ((1024 * 1024) * (sizeof(void*) >= 8 ? UINT64_C(8192) : UINT64_C(256)))
+   }
+	{$IFDEF CPU64}
+     expected := 8 * GB;
+	{$ELSE}
+	expected := 256 * MB;
+	{$ENDIF}
+
+	actual := GetMaximumWindowMappedLimit;
+	CheckEquals(expected, actual,
+		'DEFAULT_MAPPED_LIMIT not the same as the expected compile time value. ' +
+		'DEFAULT_MAPPED_LIMIT constant changed or running 32 bit DLL on 64 bit.');
+end;
+
+procedure TTestCommon.TestCheckGetMaximumWindowFileLimit;
+begin
+	{
+         /* default is unlimited */
+         #define DEFAULT_FILE_LIMIT 0
+
+         I would genuinely be surprised if someone didn't want an unlimited file size limit.
+   }
+
+	CheckEquals(GetMaximumWindowFileLimit, 0, 'DEFAULT_FILE_LIMIT not unlimited (0).');
+end;
+
+procedure TTestCommon.TestCheckSetMaximumWindowSize;
+var
+	original, testValue, retrieved: size_t;
+begin
+	original  := GetMaximumWindowSize;
+	testValue := 4 * 1024 * 1024; // 4 MB
+
+	SetMaximumWindowSize(testValue);
+	retrieved := GetMaximumWindowSize;
+
+	CheckEquals(testValue, retrieved, 'Failed to set maximum window size');
+
+	SetMaximumWindowSize(original);
+	retrieved := GetMaximumWindowSize;
+	CheckEquals(original, retrieved, 'Failed to reset maximum window size to original value');
+end;
+
+procedure TTestCommon.TestCheckSetMaximumWindowMappedLimit;
+var
+	original, testValue, retrieved: size_t;
+begin
+	original  := GetMaximumWindowMappedLimit;
+	testValue := 4 * 1024 * 1024; // 4 MB
+
+	SetMaximumWindowMappedLimit(testValue);
+	retrieved := GetMaximumWindowMappedLimit;
+
+	CheckEquals(testValue, retrieved, 'Failed to set maximum window mapped limit');
+
+	SetMaximumWindowMappedLimit(original);
+	retrieved := GetMaximumWindowMappedLimit;
+	CheckEquals(original, retrieved, 'Failed to reset maximum window mapped limit to original value');
+end;
+
+procedure TTestCommon.TestCheckSetMaximumWindowFileLimit;
+var
+	original, testValue, retrieved: size_t;
+begin
+	original  := GetMaximumWindowFileLimit;
+	testValue := 256;
+
+	SetMaximumWindowFileLimit(testValue);
+	retrieved := GetMaximumWindowFileLimit;
+
+	CheckEquals(testValue, retrieved, 'Failed to set maximum window file limit');
+
+	SetMaximumWindowFileLimit(original);
+	retrieved := GetMaximumWindowFileLimit;
+	CheckEquals(original, retrieved, 'Failed to reset maximum window file limit to original value');
+end;
+
+type
+	Pgit_error = ^Tgit_error;
+
+	Tgit_error = record
+		message: Pansichar;
+		klass:	Integer;
+	end;
+
+// TODO: move this into the right unit
+function Libgit2GetLastError: Pgit_error; cdecl; varargs; external LibGit2Dll name 'git_error_last';
+
+procedure TTestCommon.TestGetSetResetSearchPath;
+const
+	TestBasePath = 'test_path';
+
+	function JoinPaths(const Paths: array of String): String;
+	var
+		sb: TStringBuilder;
+		i:  Integer;
+	begin
+		sb := TStringBuilder.Create;
+		try
+			for i := Low(Paths) to High(Paths) do
+			begin
+				if Paths[i] = '' then
+				begin
+					Continue;
+				end;
+				if sb.Length > 0 then
+				begin
+					sb.Append(PathSeparator);
+				end;
+				sb.Append(Paths[i]);
+			end;
+			Result := sb.ToString;
+		finally
+			sb.Free;
+		end;
+	end;
+
+	procedure CheckLibgit2(ResultCode: Integer; const Msg: String);
+	var
+		err: Pgit_error;
+	begin
+		if ResultCode <> 0 then
+		begin
+			err := Libgit2GetLastError;
+			if Assigned(err) and Assigned(err^.message) then
+			begin
+				Fail(Format('%s: %s (code %d)', [Msg, String(err^.message), ResultCode]));
+			end
+			else
+			begin
+				Fail(Format('%s: unknown error (code %d)', [Msg, ResultCode]));
+			end;
+		end;
+	end;
+
+	procedure TestLevelPath(const level: TGitConfigLevel);
+	var
+		levelName: String;
+		originalPath, testPath, appendedPath, actualPath: String;
+		res: Integer;
+	begin
+		levelName := GetEnumName(TypeInfo(TGitConfigLevel), Ord(level));
+		testPath  := Format('%s_%d', [TestBasePath, Ord(level)]);
+
+		res := GetSearchPath(level, originalPath);
+		CheckLibgit2(res, Format('[%s] GetSearchPath (original)', [levelName]));
+
+		res := SetSearchPath(level, testPath);
+		CheckLibgit2(res, Format('[%s] SetSearchPath', [levelName]));
+
+		res := GetSearchPath(level, actualPath);
+		CheckLibgit2(res, Format('[%s] GetSearchPath (after set)', [levelName]));
+		CheckEquals(testPath, actualPath, Format('[%s] Set path mismatch', [levelName]));
+
+		appendedPath := JoinPaths([actualPath, testPath]);
+		res := SetSearchPath(level, appendedPath);
+		CheckLibgit2(res, Format('[%s] SetSearchPath (append)', [levelName]));
+
+		res := GetSearchPath(level, actualPath);
+		CheckLibgit2(res, Format('[%s] GetSearchPath (after append)', [levelName]));
+		CheckEquals(appendedPath, actualPath, Format('[%s] Appended path mismatch', [levelName]));
+
+		res := ResetSearchPath(level);
+		CheckLibgit2(res, Format('[%s] ResetSearchPath', [levelName]));
+
+		res := GetSearchPath(level, actualPath);
+		CheckLibgit2(res, Format('[%s] GetSearchPath (after reset)', [levelName]));
+
+		if level <> TGitConfigLevel.System then
+		begin
+			CheckEquals(originalPath, actualPath, Format('[%s] Reset did not restore path', [levelName]));
+		end;
+	end;
+
+var
+	i: Integer;
+begin
+	for i := Ord(TGitConfigLevel.ProgramData) to Ord(TGitConfigLevel.Global) do
+	begin
+		TestLevelPath(TGitConfigLevel(i));
+	end;
+end;
+
+
+initialization
+	RegisterTest(TTestCommon);
+end.
