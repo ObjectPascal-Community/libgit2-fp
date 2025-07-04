@@ -490,9 +490,9 @@ end;
 
 procedure TTestCommon.TestEnableCaching;
 begin
-	CheckTrue(EnableCaching(True), 'Enabling cache failed');
-	CheckTrue(EnableCaching(False), 'Disabling cache failed');
-	CheckTrue(EnableCaching(True), 'Enabling cache again failed');
+	CheckTrue(EnableCaching, 'Enabling cache failed');
+	CheckTrue(DisableCaching, 'Disabling cache failed');
+	CheckTrue(EnableCaching, 'Enabling cache again failed');
 end;
 
 procedure TTestCommon.TestGetCachedMemory;
@@ -739,8 +739,6 @@ begin
 	CheckEquals(0, res, 'GetUserAgentProduct after empty string failed');
 	CheckEquals('git/2.0', getProduct, 'GetUserAgentProduct after empty string did not return default');
 end;
-
-
 
 initialization
 	RegisterTest(TTestCommon);

@@ -93,7 +93,8 @@ function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: 
 function GetCacheObjectMaxSize: ssize_t;
 function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
 
-function EnableCaching(const Enabled: Boolean): Boolean;
+function EnableCaching: Boolean;
+function DisableCaching: Boolean;
 procedure GetCachedMemory(out current, allowed: ssize_t);
 
 function GetTemplatePath(out path: String): Integer;
@@ -477,9 +478,14 @@ begin
 	Result := CacheMaxSize;
 end;
 
-function EnableCaching(const Enabled: Boolean): Boolean;
+function EnableCaching: Boolean;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.EnableCaching), Ord(Enabled)) = 0;
+	Result := Libgit2Opts(Ord(TGitOption.EnableCaching), 1) = 0;
+end;
+
+function DisableCaching: Boolean;
+begin
+	Result := Libgit2Opts(Ord(TGitOption.EnableCaching), 0) = 0;
 end;
 
 procedure GetCachedMemory(out current, allowed: ssize_t);
