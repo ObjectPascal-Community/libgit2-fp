@@ -61,7 +61,7 @@ procedure SetMaximumWindowFileLimit(const size: size_t);
 type
 	TGitConfigLevel = (
 		HighestLevel = -1,
-		EnumPadding,
+		Reserved,
 		ProgramData,
 		System,
 		XDG,
@@ -79,7 +79,7 @@ type
 	TGitObjectType = (
 		Any = -2,
 		Invalid,
-		EnumPadding,
+		Reserved,
 		Commit,
 		Tree,
 		Blob,
@@ -88,8 +88,11 @@ type
 		RefDelta
 		);
 
-function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Integer;
-function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Integer;
+function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
+function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
+
+function GetCacheObjectMaxSize: ssize_t;
+function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
 
 procedure EnableCaching(const Enabled: Boolean);
 procedure GetCachedMemory(out current, allowed: ssize_t);
@@ -155,8 +158,21 @@ uses
 	LibGit2.StrArray;
 
 var
-	CachedFeatures: TGitFeatures;
-	FeaturesCached: Boolean = False;
+	CachedFeatures:	 TGitFeatures;
+	FeaturesCached:	 Boolean = False;
+	CacheObjectLimits: array[TGitObjectType] of size_t = ( // .
+		High(size_t), // Any
+		High(size_t), // Invalid
+		0,	 // Reserved
+		4096, // Commit
+		4096, // Tree
+		0,	 // Blob
+		4096, // Tag
+		0,	 // OffsetDelta
+		0	  // RefDelta
+		);
+	CacheMaxSize:		ssize_t = 256 * 1024 * 1024; // 256 MB, as per the docs
+
 
 type
 	TGitOption = (
@@ -401,17 +417,55 @@ end;
 
 function ResetSearchPath(const level: TGitConfigLevel): Integer;
 begin
-	Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), nil);
+	Result := Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), nil);
 end;
 
-function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Integer;
+function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetCacheObjectLimit), Ord(ObjectType), CacheSize);
+	Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid) or
+		(ObjectType = TGitObjectType.Reserved);
 end;
 
-function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Integer;
+function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), MaxStorageBytes);
+	if IsInvalidObjectType(ObjectType) then
+	begin
+		Result := False;
+		Exit;
+	end;
+
+	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), Ord(ObjectType), CacheSize) = 0;
+	if Result then
+	begin
+		CacheObjectLimits[ObjectType] := CacheSize;
+	end;
+end;
+
+function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
+begin
+	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), MaxStorageBytes) = 0;
+	if Result then
+	begin
+		CacheMaxSize := MaxStorageBytes;
+	end;
+end;
+
+function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
+begin
+	if IsInvalidObjectType(ObjectType) then
+	begin
+		Result := High(size_t);
+		Exit;
+	end
+	else
+	begin
+		Result := CacheObjectLimits[ObjectType];
+	end;
+end;
+
+function GetCacheObjectMaxSize: ssize_t;
+begin
+	Result := CacheMaxSize;
 end;
 
 procedure EnableCaching(const Enabled: Boolean);

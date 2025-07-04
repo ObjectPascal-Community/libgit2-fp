@@ -8,13 +8,10 @@ uses
 	Classes,
 	fpcunit,
 	typinfo,
+	LibGit2.Platform,
 	SysUtils,
 	jsonparser,
 	testregistry,
-	{$IFDEF WINDOWS}
-   Windows,
-	{$ENDIF}
-	LibGit2.Platform,
 	LibGit2.Common,
 	LibGit2.StdInt;
 
@@ -42,6 +39,9 @@ type
 		procedure TestCheckSetMaximumWindowFileLimit;
 
 		procedure TestGetSetResetSearchPath;
+
+		procedure TestCacheObjectMaxSize;
+		procedure TestCacheObjectLimit;
 	end;
 
 implementation
@@ -135,9 +135,6 @@ begin
 end;
 
 procedure TTestCommon.TestCheckGetMaximumWindowSize;
-const
-	GB = 1024 * 1024 * 1024;
-	MB = 1024 * 1024;
 var
 	actual, expected: size_t;
 begin
@@ -153,9 +150,9 @@ begin
    time.
    }
 	{$IFDEF CPU64}
-     expected := 1 * GB;
+     expected := 1 * 1024 * 1024 * 1024;
 	{$ELSE}
-	expected := 32 * MB;
+	expected := 32 * 1024 * 1024;
 	{$ENDIF}
 
 	actual := GetMaximumWindowSize;
@@ -165,9 +162,6 @@ begin
 end;
 
 procedure TTestCommon.TestCheckGetMaximumWindowMappedLimit;
-const
-	GB = 1024 * 1024 * 1024;
-	MB = 1024 * 1024;
 var
 	actual, expected: size_t;
 begin
@@ -176,9 +170,9 @@ begin
                  ((1024 * 1024) * (sizeof(void*) >= 8 ? UINT64_C(8192) : UINT64_C(256)))
    }
 	{$IFDEF CPU64}
-     expected := 8 * GB;
+     expected := 8 * 1024 * 1024 * 1024;
 	{$ELSE}
-	expected := 256 * MB;
+	expected := 256 * 1024 * 1024;
 	{$ENDIF}
 
 	actual := GetMaximumWindowMappedLimit;
@@ -353,6 +347,67 @@ begin
 	for i := Ord(TGitConfigLevel.ProgramData) to Ord(TGitConfigLevel.Global) do
 	begin
 		TestLevelPath(TGitConfigLevel(i));
+	end;
+end;
+
+procedure TTestCommon.TestCacheObjectMaxSize;
+var
+	originalMaxSize, testMaxSize, actualMaxSize: ssize_t;
+	Success: Boolean;
+begin
+	originalMaxSize := GetCacheObjectMaxSize;
+
+	testMaxSize := 16 * 1024 * 1024; // 16 MB
+	Success	  := SetCacheObjectMaxSize(testMaxSize);
+	CheckTrue(Success, 'SetCacheObjectMaxSize failed');
+
+	actualMaxSize := GetCacheObjectMaxSize;
+	CheckEquals(testMaxSize, actualMaxSize, 'Cache object max size was not set correctly');
+
+	Success := SetCacheObjectMaxSize(originalMaxSize);
+	CheckTrue(Success, 'Failed to restore original CacheObjectMaxSize');
+end;
+
+procedure TTestCommon.TestCacheObjectLimit;
+var
+	originalLimit, testLimit, actualLimit: size_t;
+	Success: Boolean;
+	objType: TGitObjectType;
+
+	function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
+	begin
+		Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid) or
+			(ObjectType = TGitObjectType.Reserved);
+	end;
+
+begin
+	testLimit := 8 * 1024; // 8 KB test limit
+
+	for objType := Low(TGitObjectType) to High(TGitObjectType) do
+	begin
+		if IsInvalidObjectType(objType) then
+		begin
+			Success := SetCacheObjectLimit(objType, testLimit);
+			CheckFalse(Success, Format('SetCacheObjectLimit should fail for invalid object type %s',
+				[GetEnumName(TypeInfo(TGitObjectType), Ord(objType))]));
+		end
+		else
+		begin
+			originalLimit := GetCacheObjectLimit(objType);
+
+			Success := SetCacheObjectLimit(objType, testLimit);
+			CheckTrue(Success, Format('SetCacheObjectLimit failed for valid object type %s',
+				[GetEnumName(TypeInfo(TGitObjectType), Ord(objType))]));
+
+			actualLimit := GetCacheObjectLimit(objType);
+			CheckEquals(testLimit, actualLimit,
+				Format('CacheObjectLimit was not set correctly for object type %s',
+				[GetEnumName(TypeInfo(TGitObjectType), Ord(objType))]));
+
+			Success := SetCacheObjectLimit(objType, originalLimit);
+			CheckTrue(Success, Format('Failed to restore original CacheObjectLimit for object type %s',
+				[GetEnumName(TypeInfo(TGitObjectType), Ord(objType))]));
+		end;
 	end;
 end;
 
