@@ -28,10 +28,11 @@ procedure Libgit2BufferDispose(Buffer: PGitBuf); cdecl; external LibGit2Dll name
 
 procedure DisposeBuffer(var Buffer: TGitBuf);
 begin
-	Libgit2BufferDispose(@Buffer);
-	Buffer.Ptr		:= nil;
-	Buffer.Size	  := 0;
-	Buffer.Reserved := 0;
+	if Buffer.Ptr <> nil then
+	begin
+		Libgit2BufferDispose(@Buffer);
+		FillChar(Buffer, SizeOf(Buffer), 0);
+	end;
 end;
 
 end.

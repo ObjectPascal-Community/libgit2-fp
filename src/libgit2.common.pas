@@ -534,29 +534,36 @@ end;
 
 function SetUserAgent(const userAgent: String): Integer;
 var
-	ansiUserAgent: Ansistring;
+	utf8: Utf8string;
 begin
-	ansiUserAgent := Ansistring(userAgent);
-	Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), Pansichar(ansiUserAgent));
+	if userAgent = '' then
+	begin
+		Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), nil);
+	end
+	else
+	begin
+		utf8	:= UTF8Encode(userAgent); // explicit to avoid GC issues
+		Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), Pansichar(utf8));
+	end;
 end;
 
 function GetUserAgent(out userAgent: String): Integer;
 var
-	Buffer: TGitBuf;
+	buf: TGitBuf;
 begin
-	FillChar(Buffer, SizeOf(Buffer), 0);
-	Result := Libgit2Opts(Ord(TGitOption.GetUserAgent), @Buffer);
+	FillChar(buf, SizeOf(buf), 0);
+	Result := Libgit2Opts(Ord(TGitOption.GetUserAgent), @buf);
 	if Result = 0 then
 	begin
-		if Buffer.Ptr <> nil then
+		if buf.Ptr <> nil then
 		begin
-			userAgent := String(Ansistring(Buffer.Ptr));
+			userAgent := UTF8ToString(Utf8string(buf.Ptr));
 		end
 		else
 		begin
 			userAgent := '';
 		end;
-		DisposeBuffer(Buffer);
+		DisposeBuffer(buf);
 	end
 	else
 	begin
@@ -565,28 +572,37 @@ begin
 end;
 
 function SetUserAgentProduct(const userAgentProduct: String): Integer;
+var
+	utf8: Utf8string;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetUserAgentProduct), Pansichar(Ansistring(userAgentProduct)));
+	if userAgentProduct = '' then
+	begin
+		Result := Libgit2Opts(Ord(TGitOption.SetUserAgentProduct), nil);
+	end
+	else
+	begin
+		utf8	:= UTF8Encode(userAgentProduct); // safe, ensures pointer lives long enough
+		Result := Libgit2Opts(Ord(TGitOption.SetUserAgentProduct), Pansichar(utf8));
+	end;
 end;
 
 function GetUserAgentProduct(out userAgentProduct: String): Integer;
 var
-	Buffer: TGitBuf;
+	buf: TGitBuf;
 begin
-	Buffer := GitInitBuf;
-	FillChar(Buffer, SizeOf(Buffer), 0);
-	Result := Libgit2Opts(Ord(TGitOption.GetUserAgentProduct), @Buffer);
+	FillChar(buf, SizeOf(buf), 0);
+	Result := Libgit2Opts(Ord(TGitOption.GetUserAgentProduct), @buf);
 	if Result = 0 then
 	begin
-		if Buffer.Ptr <> nil then
+		if buf.Ptr <> nil then
 		begin
-			userAgentProduct := String(Ansistring(Buffer.Ptr));
+			userAgentProduct := UTF8ToString(Utf8string(buf.Ptr));
 		end
 		else
 		begin
 			userAgentProduct := '';
 		end;
-		DisposeBuffer(Buffer);
+		DisposeBuffer(buf);
 	end
 	else
 	begin

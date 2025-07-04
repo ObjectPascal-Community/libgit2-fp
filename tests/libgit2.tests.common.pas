@@ -51,6 +51,9 @@ type
 
 		procedure TestSetSSLCertLocations;
 		procedure TestAddSSLX509Cert;
+
+		procedure TestSetGetUserAgent;
+		procedure TestSetGetUserAgentProduct;
 	end;
 
 implementation
@@ -348,15 +351,15 @@ begin
 end;
 
 type
-	Pgit_error = ^Tgit_error;
+	PGitError = ^TGitError;
 
-	Tgit_error = record
+	TGitError = record
 		message: Pansichar;
-		klass:	Integer;
+		kind:	 Integer;
 	end;
 
 // TODO: move this into the right unit
-function Libgit2GetLastError: Pgit_error; cdecl; varargs; external LibGit2Dll name 'git_error_last';
+function Libgit2GetLastError: PGitError; cdecl; varargs; external LibGit2Dll name 'git_error_last';
 
 procedure TTestCommon.TestGetSetResetSearchPath;
 const
@@ -364,7 +367,7 @@ const
 
 	procedure CheckLibgit2(ResultCode: Integer; const Msg: String);
 	var
-		err: Pgit_error;
+		err: PGitError;
 	begin
 		if ResultCode <> 0 then
 		begin
@@ -548,7 +551,7 @@ end;
 procedure TTestCommon.TestSetSSLCertLocations;
 var
 	res, i: Integer;
-	err:	 Pgit_error;
+	err:	 PGitError;
 begin
 	// TODO: add more failure points
 
@@ -603,7 +606,7 @@ end;
 procedure TTestCommon.TestAddSSLX509Cert;
 var
 	res: Integer;
-	err: Pgit_error;
+	err: PGitError;
 begin
 	// TODO: add more failure points
 
@@ -630,6 +633,63 @@ begin
 			);
 	end;
 end;
+
+procedure TTestCommon.TestSetGetUserAgent;
+var
+	setAgent, getAgent: String;
+	res: Integer;
+	v:	TGitVersion;
+	libgitVersion: String;
+begin
+	setAgent := 'FPCUnitAgent/1.0';
+
+	res := SetUserAgent(setAgent);
+	CheckEquals(0, res, 'SetUserAgent failed');
+
+	res := GetUserAgent(getAgent);
+	CheckEquals(0, res, 'GetUserAgent failed');
+	CheckEquals(setAgent, getAgent, 'GetUserAgent did not return the expected value');
+
+	res := SetUserAgent('');
+	CheckEquals(0, res, 'SetUserAgent with empty string failed');
+
+	res := GetUserAgent(getAgent);
+	CheckEquals(0, res, 'GetUserAgent after empty string failed');
+
+	v := GetVersion;
+	libgitVersion := Format('libgit2 %d.%d.%d%s', [v.Major, v.Minor, v.Revision, GetPrerelease]);
+
+	CheckEquals(libgitVersion, getAgent,
+		'GetUserAgent after empty string did not reset to default (' + libgitVersion + ')');
+
+	// TODO: find why this crashes with UTF-8
+end;
+
+procedure TTestCommon.TestSetGetUserAgentProduct;
+var
+	setProduct, getProduct: String;
+	res: Integer;
+begin
+	setProduct := 'MyProduct/2025.1';
+	res := SetUserAgentProduct(setProduct);
+	CheckEquals(0, res, 'SetUserAgentProduct failed');
+
+	res := GetUserAgentProduct(getProduct);
+	CheckEquals(0, res, 'GetUserAgentProduct failed');
+	CheckEquals(setProduct, getProduct, 'GetUserAgentProduct did not return the expected value');
+
+	res := SetUserAgentProduct('');
+	CheckEquals(0, res, 'SetUserAgentProduct with empty string failed');
+
+	res := GetUserAgentProduct(getProduct);
+	CheckEquals(0, res, 'GetUserAgentProduct after empty string failed');
+	CheckEquals('git/2.0', getProduct,
+		'GetUserAgentProduct after empty string did not return default');
+
+	// TODO: find why this crashes with UTF-8
+end;
+
+
 
 initialization
 	RegisterTest(TTestCommon);
