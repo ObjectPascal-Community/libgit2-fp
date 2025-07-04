@@ -534,7 +534,7 @@ end;
 
 function SetUserAgent(const userAgent: String): Integer;
 var
-	utf8: Utf8string;
+	utf8: Ansistring;
 begin
 	if userAgent = '' then
 	begin
@@ -542,7 +542,7 @@ begin
 	end
 	else
 	begin
-		utf8	:= UTF8Encode(userAgent); // explicit to avoid GC issues
+		utf8	:= UTF8Encode(userAgent);
 		Result := Libgit2Opts(Ord(TGitOption.SetUserAgent), Pansichar(utf8));
 	end;
 end;
@@ -557,7 +557,7 @@ begin
 	begin
 		if buf.Ptr <> nil then
 		begin
-			userAgent := UTF8ToString(Utf8string(buf.Ptr));
+			userAgent := UTF8ToString(Ansistring(buf.Ptr));
 		end
 		else
 		begin
@@ -571,9 +571,10 @@ begin
 	end;
 end;
 
+
 function SetUserAgentProduct(const userAgentProduct: String): Integer;
 var
-	utf8: Utf8string;
+	utf8: Ansistring;
 begin
 	if userAgentProduct = '' then
 	begin
@@ -581,7 +582,7 @@ begin
 	end
 	else
 	begin
-		utf8	:= UTF8Encode(userAgentProduct); // safe, ensures pointer lives long enough
+		utf8	:= UTF8Encode(userAgentProduct);
 		Result := Libgit2Opts(Ord(TGitOption.SetUserAgentProduct), Pansichar(utf8));
 	end;
 end;
@@ -596,7 +597,7 @@ begin
 	begin
 		if buf.Ptr <> nil then
 		begin
-			userAgentProduct := UTF8ToString(Utf8string(buf.Ptr));
+			userAgentProduct := UTF8ToString(Ansistring(buf.Ptr));
 		end
 		else
 		begin

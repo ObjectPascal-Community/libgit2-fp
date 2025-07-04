@@ -53,7 +53,10 @@ type
 		procedure TestAddSSLX509Cert;
 
 		procedure TestSetGetUserAgent;
+		procedure TestSetGetUserAgentUnicode;
+
 		procedure TestSetGetUserAgentProduct;
+		procedure TestSetGetUserAgentProductUnicode;
 	end;
 
 implementation
@@ -661,8 +664,6 @@ begin
 
 	CheckEquals(libgitVersion, getAgent,
 		'GetUserAgent after empty string did not reset to default (' + libgitVersion + ')');
-
-	// TODO: find why this crashes with UTF-8
 end;
 
 procedure TTestCommon.TestSetGetUserAgentProduct;
@@ -685,8 +686,58 @@ begin
 	CheckEquals(0, res, 'GetUserAgentProduct after empty string failed');
 	CheckEquals('git/2.0', getProduct,
 		'GetUserAgentProduct after empty string did not return default');
+end;
 
-	// TODO: find why this crashes with UTF-8
+procedure TTestCommon.TestSetGetUserAgentUnicode;
+var
+	setAgent, getAgent: String;
+	res: Integer;
+	v:	TGitVersion;
+	libgitVersion: String;
+begin
+	setAgent := 'FPCUnitAgent/1.0 Ω≈ç√∫˜µ≤≥÷ 漢字中國中国ჩინეთი😄';
+
+	res := SetUserAgent(setAgent);
+	CheckEquals(0, res, 'SetUserAgent failed with UTF-8');
+
+	res := GetUserAgent(getAgent);
+	CheckEquals(0, res, 'GetUserAgent failed with UTF-8');
+	CheckEquals(setAgent, getAgent, 'GetUserAgent did not return expected UTF-8 value');
+
+	res := SetUserAgent('');
+	CheckEquals(0, res, 'SetUserAgent with empty string failed');
+
+	res := GetUserAgent(getAgent);
+	CheckEquals(0, res, 'GetUserAgent after empty string failed');
+
+
+	v := GetVersion;
+	libgitVersion := Format('libgit2 %d.%d.%d%s', [v.Major, v.Minor, v.Revision, GetPrerelease]);
+
+	CheckEquals(libgitVersion, getAgent,
+		'GetUserAgent after empty string did not reset to default (' + libgitVersion + ')');
+end;
+
+procedure TTestCommon.TestSetGetUserAgentProductUnicode;
+var
+	setProduct, getProduct: String;
+	res: Integer;
+begin
+	setProduct := 'MyProduct/1.0 Ω≈ç√∫˜µ≤≥÷ 漢字中國中国ჩინეთი😄';
+
+	res := SetUserAgentProduct(setProduct);
+	CheckEquals(0, res, 'SetUserAgentProduct failed with UTF-8');
+
+	res := GetUserAgentProduct(getProduct);
+	CheckEquals(0, res, 'GetUserAgentProduct failed with UTF-8');
+	CheckEquals(setProduct, getProduct, 'GetUserAgentProduct did not return expected UTF-8 value');
+
+	res := SetUserAgentProduct('');
+	CheckEquals(0, res, 'SetUserAgentProduct with empty string failed');
+
+	res := GetUserAgentProduct(getProduct);
+	CheckEquals(0, res, 'GetUserAgentProduct after empty string failed');
+	CheckEquals('git/2.0', getProduct, 'GetUserAgentProduct after empty string did not return default');
 end;
 
 
