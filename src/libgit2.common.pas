@@ -119,14 +119,30 @@ function GetWindowsShareMode(out mode: TWindowsShareMode): Integer;
 
 procedure SetSSLCiphers(const ciphers: String);
 
-procedure EnableStrictObjectCreation(const Enabled: Boolean);
-procedure EnableStrictSymbolicRefCreation(const Enabled: Boolean);
-procedure EnableOfsDelta(const Enabled: Boolean);
-procedure EnableFSyncGitdir(const Enabled: Boolean);
-procedure EnableStrictHashVerification(const Enabled: Boolean);
-procedure EnableUnsavedIndexSafety(const Enabled: Boolean);
-procedure DisablePackKeepFileChecks(const Enabled: Boolean);
-procedure EnableHttpExpectContinue(const Enabled: Boolean);
+
+procedure EnableStrictObjectCreation;
+procedure DisableStrictObjectCreation;
+
+procedure EnableStrictSymbolicRefCreation;
+procedure DisableStrictSymbolicRefCreation;
+
+procedure EnableOfsDelta;
+procedure DisableOfsDelta;
+
+procedure EnableFSyncGitdir;
+procedure DisableFSyncGitdir;
+
+procedure EnableStrictHashVerification;
+procedure DisableStrictHashVerification;
+
+procedure EnableUnsavedIndexSafety;
+procedure DisableUnsavedIndexSafety;
+
+procedure EnablePackKeepFileChecks;
+procedure DisablePackKeepFileChecks;
+
+procedure EnableHttpExpectContinue;
+procedure DisableHttpExpectContinue;
 
 function GetPackMaxObjects: size_t;
 procedure SetPackMaxObjects(const objects: size_t);
@@ -640,45 +656,127 @@ begin
 	Libgit2Opts(Ord(TGitOption.SetSSLCiphers), Pansichar(Ansistring(ciphers)));
 end;
 
-procedure EnableStrictObjectCreation(const Enabled: Boolean);
+procedure EnableStrictObjectCreationInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableStrictObjectCreation), Ord(Enabled));
 end;
 
-procedure EnableStrictSymbolicRefCreation(const Enabled: Boolean);
+procedure EnableStrictSymbolicRefCreationInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableStrictSymbolicRefCreation), Ord(Enabled));
 end;
 
-procedure EnableOfsDelta(const Enabled: Boolean);
+procedure EnableOfsDeltaInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableOfsDelta), Ord(Enabled));
 end;
 
-procedure EnableFSyncGitdir(const Enabled: Boolean);
+procedure EnableFSyncGitdirInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableFSyncGitdir), Ord(Enabled));
 end;
 
-procedure EnableStrictHashVerification(const Enabled: Boolean);
+procedure EnableStrictHashVerificationInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableStrictHashVerification), Ord(Enabled));
 end;
 
-procedure EnableUnsavedIndexSafety(const Enabled: Boolean);
+procedure EnableUnsavedIndexSafetyInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableUnsavedIndexSafety), Ord(Enabled));
 end;
 
-procedure DisablePackKeepFileChecks(const Enabled: Boolean);
+procedure DisablePackKeepFileChecksInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.DisablePackKeepFileChecks), Ord(Enabled));
 end;
 
-procedure EnableHttpExpectContinue(const Enabled: Boolean);
+procedure EnableHttpExpectContinueInternal(const Enabled: Boolean);
 begin
 	Libgit2Opts(Ord(TGitOption.EnableHttpExpectContinue), Ord(Enabled));
 end;
+
+procedure EnableStrictObjectCreation;
+begin
+	EnableStrictObjectCreationInternal(True);
+end;
+
+procedure DisableStrictObjectCreation;
+begin
+	EnableStrictObjectCreationInternal(False);
+end;
+
+procedure EnableStrictSymbolicRefCreation;
+begin
+	EnableStrictSymbolicRefCreationInternal(True);
+end;
+
+procedure DisableStrictSymbolicRefCreation;
+begin
+	EnableStrictSymbolicRefCreationInternal(False);
+end;
+
+procedure EnableOfsDelta;
+begin
+	EnableOfsDeltaInternal(True);
+end;
+
+procedure DisableOfsDelta;
+begin
+	EnableOfsDeltaInternal(False);
+end;
+
+procedure EnableFSyncGitdir;
+begin
+	EnableFSyncGitdirInternal(True);
+end;
+
+procedure DisableFSyncGitdir;
+begin
+	EnableFSyncGitdirInternal(False);
+end;
+
+procedure EnableStrictHashVerification;
+begin
+	EnableStrictHashVerificationInternal(True);
+end;
+
+procedure DisableStrictHashVerification;
+begin
+	EnableStrictHashVerificationInternal(False);
+end;
+
+procedure EnableUnsavedIndexSafety;
+begin
+	EnableUnsavedIndexSafetyInternal(True);
+end;
+
+procedure DisableUnsavedIndexSafety;
+begin
+	EnableUnsavedIndexSafetyInternal(False);
+end;
+
+procedure EnablePackKeepFileChecks;
+begin
+	DisablePackKeepFileChecksInternal(False);
+end;
+
+procedure DisablePackKeepFileChecks;
+begin
+	DisablePackKeepFileChecksInternal(True);
+end;
+
+procedure EnableHttpExpectContinue;
+begin
+	EnableHttpExpectContinueInternal(True);
+end;
+
+procedure DisableHttpExpectContinue;
+begin
+	EnableHttpExpectContinueInternal(False);
+end;
+
+
 
 function GetPackMaxObjects: size_t;
 begin
