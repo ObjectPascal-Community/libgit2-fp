@@ -77,9 +77,8 @@ function ResetSearchPath(const level: TGitConfigLevel): Integer;
 
 type
 	TGitObjectType = (
-		Any = -2,
+		Any,
 		Invalid,
-		Reserved,
 		Commit,
 		Tree,
 		Blob,
@@ -94,7 +93,7 @@ function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: 
 function GetCacheObjectMaxSize: ssize_t;
 function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
 
-procedure EnableCaching(const Enabled: Boolean);
+function EnableCaching(const Enabled: Boolean): Boolean;
 procedure GetCachedMemory(out current, allowed: ssize_t);
 
 function GetTemplatePath(out path: String): Integer;
@@ -163,7 +162,6 @@ var
 	CacheObjectLimits: array[TGitObjectType] of size_t = ( // .
 		High(size_t), // Any
 		High(size_t), // Invalid
-		0,	 // Reserved
 		4096, // Commit
 		4096, // Tree
 		0,	 // Blob
@@ -422,11 +420,21 @@ end;
 
 function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
 begin
-	Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid) or
-		(ObjectType = TGitObjectType.Reserved);
+	Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid);
 end;
 
 function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
+const
+	CValues: array[TGitObjectType] of Integer = ( // .
+		-2,  // Any
+		-1,  // Invalid
+		1,	// Commit
+		2,	// Tree
+		3,	// Blob
+		4,	// Tag
+		6,	// OffsetDelta
+		7	 // RefDelta
+		);
 begin
 	if IsInvalidObjectType(ObjectType) then
 	begin
@@ -434,7 +442,7 @@ begin
 		Exit;
 	end;
 
-	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), Ord(ObjectType), CacheSize) = 0;
+	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), CValues[ObjectType], CacheSize) = 0;
 	if Result then
 	begin
 		CacheObjectLimits[ObjectType] := CacheSize;
@@ -449,6 +457,7 @@ begin
 		CacheMaxSize := MaxStorageBytes;
 	end;
 end;
+
 
 function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
 begin
@@ -468,9 +477,9 @@ begin
 	Result := CacheMaxSize;
 end;
 
-procedure EnableCaching(const Enabled: Boolean);
+function EnableCaching(const Enabled: Boolean): Boolean;
 begin
-	Libgit2Opts(Ord(TGitOption.EnableCaching), Ord(Enabled));
+	Result := Libgit2Opts(Ord(TGitOption.EnableCaching), Ord(Enabled)) = 0;
 end;
 
 procedure GetCachedMemory(out current, allowed: ssize_t);
@@ -673,41 +682,53 @@ end;
 
 function GetExtensions(out extensions: TStringArray): Integer;
 var
-	StrArray: PGitStrArray = nil;
+	StrArray: TGitStrArray;
 	i: Integer;
 begin
-	StrArray := GetMem(SizeOf(TGitStrArray));
-	try
-		FillChar(StrArray^, SizeOf(TGitStrArray), 0);
-		Result := Libgit2Opts(Ord(TGitOption.GetExtensions), StrArray);
-		if Result = 0 then
-		begin
-			SetLength(extensions, StrArray^.Count);
-			for i := 0 to StrArray^.Count - 1 do
+	FillChar(StrArray, SizeOf(StrArray), 0);
+
+	Result := Libgit2Opts(Ord(TGitOption.GetExtensions), @StrArray);
+	if Result = 0 then
+	begin
+		try
+			SetLength(extensions, StrArray.Count);
+			for i := 0 to StrArray.Count - 1 do
 			begin
-				extensions[i] := String(Ansistring(StrArray^.strings[i]));
+				extensions[i] := UTF8ToString(StrArray.strings[i]);
 			end;
-		end
-		else
-		begin
-			SetLength(extensions, 0);
+		finally
+			DisposeStrArray(StrArray);
 		end;
-	finally
-		FreeMem(StrArray);
+	end
+	else
+	begin
+		SetLength(extensions, 0);
 	end;
 end;
 
 function SetExtensions(const extensions: TStringArray): Integer;
 var
-	CExtensions: array of Pansichar = nil;
+	UTF8Strings: specialize TArray<Utf8string>;
+	CExtensions: array of Pansichar;
 	i: Integer;
 begin
+	SetLength(UTF8Strings, Length(extensions));
 	SetLength(CExtensions, Length(extensions));
+
 	for i := 0 to High(extensions) do
 	begin
-		CExtensions[i] := Pansichar(UTF8Encode(extensions[i]));
+		UTF8Strings[i] := UTF8Encode(extensions[i]);
+		CExtensions[i] := Pansichar(UTF8Strings[i]);
 	end;
-	Result := Libgit2Opts(Ord(TGitOption.SetExtensions), @CExtensions[0], Length(CExtensions));
+
+	if Length(CExtensions) > 0 then
+	begin
+		Result := Libgit2Opts(Ord(TGitOption.SetExtensions), @CExtensions[0], Length(CExtensions));
+	end
+	else
+	begin
+		Result := Libgit2Opts(Ord(TGitOption.SetExtensions), nil, 0);
+	end;
 end;
 
 function GetOwnerValidation: Boolean;
