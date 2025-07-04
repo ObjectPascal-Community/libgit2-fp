@@ -29,7 +29,7 @@ type
 		procedure TestCheckIfWindowsFeaturesExist;
 		{$ENDIF}
 		procedure TestCheckIfPrereleaseValid;
-		procedure TestBackends;
+		procedure TestGetFeatureBackends;
 
 		procedure TestCheckGetMaximumWindowSize;
 		procedure TestCheckGetMaximumWindowMappedLimit;
@@ -143,21 +143,20 @@ begin
 		'Prerelease string is different from empty (full release), alpha, beta or rc*');
 end;
 
-procedure TTestCommon.TestBackends;
 const
 	allowedBackends: array[TGitFeature] of TStringArray = (
 		// Threads
-		('win32', 'pthread'),
+		('pthread', 'win32'),
 		// HTTPS
-		('openssl', 'openssl-dynamic', 'mbedtls', 'securetransport', 'schannel', 'winhttp'),
+		('mbedtls', 'openssl', 'openssl-dynamic', 'schannel', 'securetransport', 'winhttp'),
 		// SSH
 		('exec', 'libssh2'),
 		// NSec
-		('mtimespec', 'mtim', 'mtime', 'win32'),
+		('mtime', 'mtim', 'mtimespec', 'win32'),
 		// HttpParser
-		('httpparser', 'llhttp', 'builtin'),
+		('builtin', 'httpparser', 'llhttp'),
 		// Regex
-		('regcomp_l', 'regcomp', 'pcre', 'pcre2', 'builtin'),
+		('builtin', 'pcre', 'pcre2', 'regcomp', 'regcomp_l'),
 		// I18N
 		('iconv'),
 		// AuthNTLM
@@ -165,50 +164,62 @@ const
 		// AuthNegotiate
 		('gssapi', 'sspi'),
 		// Compression
-		('zlib', 'builtin'),
+		('builtin', 'zlib'),
 		// SHA1
-		('builtin', 'openssl', 'openssl-fips', 'openssl-dynamic', 'mbedtls', 'commoncrypto', 'win32'),
+		('builtin', 'commoncrypto', 'mbedtls', 'openssl', 'openssl-dynamic', 'openssl-fips', 'win32'),
 		// SHA256
-		('builtin', 'openssl', 'openssl-fips', 'openssl-dynamic', 'mbedtls', 'commoncrypto', 'win32')
+		('builtin', 'commoncrypto', 'mbedtls', 'openssl', 'openssl-dynamic', 'openssl-fips', 'win32')
 		);
+
+procedure TTestCommon.TestGetFeatureBackends;
 var
 	features: TGitFeatures;
 	feature: TGitFeature;
 	backend: String;
 	allowedList: TStringArray;
-	allowedBackend: String;
-	found: Boolean;
-	i:	  Integer;
 	featureName: String;
+	left, right, mid, cmp: Integer;
+	found: Boolean;
 begin
 	features := GetFeatures;
 
 	for feature := Low(TGitFeature) to High(TGitFeature) do
 	begin
 		featureName := GetEnumName(TypeInfo(TGitFeature), Ord(feature));
-		backend	  := GetFeatureBackend(feature);
+		backend	  := Trim(GetFeatureBackend(feature));
 
 		if feature in features then
 		begin
-			CheckNotEquals(backend, '',
+			CheckNotEquals('', backend,
 				Format('Enabled feature %s has empty backend', [featureName])
 				);
 
 			allowedList := allowedBackends[feature];
-			found := False;
-
 			if Length(allowedList) = 0 then
 			begin
 				Fail(Format('No allowed backends specified for feature %s', [featureName]));
 				Continue;
 			end;
 
-			for allowedBackend in allowedList do
+			left  := 0;
+			right := High(allowedList);
+			found := False;
+			while left <= right do
 			begin
-				if SameText(backend, allowedBackend) then
+				mid := (left + right) div 2;
+				cmp := AnsiCompareText(backend, allowedList[mid]);
+				if cmp = 0 then
 				begin
 					found := True;
 					Break;
+				end
+				else if cmp < 0 then
+				begin
+					right := mid - 1;
+				end
+				else
+				begin
+					left := mid + 1;
 				end;
 			end;
 
@@ -219,7 +230,7 @@ begin
 		else
 		begin
 			CheckTrue(
-				backend.IsEmpty,
+				backend = '',
 				Format('Disabled feature %s unexpectedly has backend "%s"', [featureName, backend])
 				);
 		end;
