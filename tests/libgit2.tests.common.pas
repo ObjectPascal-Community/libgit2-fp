@@ -55,6 +55,8 @@ type
 		procedure TestSetGetExtensions;
 		procedure TestSetGetOwnerValidation;
 		procedure TestSetGetHomeDirectory;
+		procedure TestSetGetServerTimeout;
+		procedure TestSetGetServerConnectTimeout;
 	end;
 
 implementation
@@ -1101,8 +1103,65 @@ begin
 		'Restored home directory does not match original');
 end;
 
+procedure TTestCommon.TestSetGetServerTimeout;
+var
+	originalTimeout, newTimeout: Integer;
+	retCode: Integer;
+begin
+	originalTimeout := GetServerTimeout;
+	CheckFalse(originalTimeout < 0, 'Original server timeout should be non-negative');
+	CheckEquals(0, originalTimeout, 'Original server timeout should be 0 (did you change the defaults?)');
 
+	newTimeout := originalTimeout + 10;
+	retCode	 := SetServerTimeout(newTimeout);
+	CheckEquals(0, retCode, 'SetServerTimeout should succeed for non-negative value');
+	CheckEquals(newTimeout, GetServerTimeout, 'GetServerTimeout should return the newly set timeout');
 
+	retCode := SetServerTimeout(0);
+	CheckEquals(0, retCode, 'SetServerTimeout should succeed for zero timeout');
+	CheckEquals(0, GetServerTimeout, 'GetServerTimeout should return zero after setting it');
+
+	retCode := SetServerTimeout(-1);
+	CheckEquals(-1, retCode, 'SetServerTimeout should fail for negative value');
+	CheckEquals(0, GetServerTimeout, 'Timeout should remain unchanged after failed set');
+
+	retCode := SetServerTimeout(GetServerTimeout);
+	CheckEquals(0, retCode, 'SetServerTimeout should succeed when setting current value');
+	CheckEquals(GetServerTimeout, GetServerTimeout, 'Timeout should be unchanged after idempotent set');
+end;
+
+procedure TTestCommon.TestSetGetServerConnectTimeout;
+var
+	originalConnectTimeout, newConnectTimeout: Integer;
+	retCode: Integer;
+begin
+	originalConnectTimeout := GetServerConnectTimeout;
+	CheckFalse(originalConnectTimeout < 0, 'Original server connect timeout should be non-negative');
+	CheckEquals(0, originalConnectTimeout, 'Original server connect timeout should be 0 (did you change the defaults?)');
+
+	newConnectTimeout := originalConnectTimeout + 10;
+	retCode := SetServerConnectTimeout(newConnectTimeout);
+	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed for non-negative value');
+	CheckEquals(newConnectTimeout, GetServerConnectTimeout,
+		'GetServerConnectTimeout should return the newly set timeout');
+
+	retCode := SetServerConnectTimeout(0);
+	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed for zero timeout');
+	CheckEquals(0, GetServerConnectTimeout, 'GetServerConnectTimeout should return zero after setting it');
+
+	retCode := SetServerConnectTimeout(-1);
+	CheckEquals(-1, retCode, 'SetServerConnectTimeout should fail for negative value');
+	CheckEquals(0, GetServerConnectTimeout, 'Connect timeout should remain unchanged after failed set');
+
+	retCode := SetServerConnectTimeout(GetServerConnectTimeout);
+	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed when setting current value');
+	CheckEquals(GetServerConnectTimeout, GetServerConnectTimeout,
+		'Connect timeout should be unchanged after idempotent set');
+
+	retCode := SetServerConnectTimeout(originalConnectTimeout);
+	CheckEquals(0, retCode, 'Restoring original server connect timeout should succeed');
+	CheckEquals(originalConnectTimeout, GetServerConnectTimeout, 'Original server connect timeout should be restored');
+end;
 
 initialization
 	RegisterTest(TTestCommon);
