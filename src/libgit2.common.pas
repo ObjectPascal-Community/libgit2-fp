@@ -978,20 +978,23 @@ function GetHomeDirectory(out path: String): Integer;
 var
 	Buffer: TGitBuf;
 begin
-	Buffer := GitInitBuf;
-	FillChar(Buffer, SizeOf(Buffer), 0);
+	Buffer := Default(TGitBuf);
 	Result := Libgit2Opts(Ord(TGitOption.GetHomeDir), @Buffer);
+
 	if Result = 0 then
 	begin
-		if Buffer.Ptr <> nil then
-		begin
-			path := String(Ansistring(Buffer.Ptr));
-		end
-		else
-		begin
-			path := '';
+		try
+			if (Buffer.Ptr <> nil) and (Buffer.size > 0) then
+			begin
+				path := UTF8ToString(Utf8string(Buffer.Ptr));
+			end
+			else
+			begin
+				path := '';
+			end;
+		finally
+			DisposeBuffer(Buffer);
 		end;
-		DisposeBuffer(Buffer);
 	end
 	else
 	begin
@@ -1001,11 +1004,22 @@ end;
 
 function SetHomeDirectory(const path: String): Integer;
 var
-	cPath: Pansichar;
+	utf8: Utf8string;
+	trimmedPath: String;
 begin
-	cPath  := Pansichar(UTF8Encode(path));
-	Result := Libgit2Opts(Ord(TGitOption.SetHomeDir), cPath);
+	trimmedPath := Trim(path);
+
+	if trimmedPath = '' then
+	begin
+		Result := Libgit2Opts(Ord(TGitOption.SetHomeDir), nil);
+	end
+	else
+	begin
+		utf8	:= UTF8Encode(trimmedPath);
+		Result := Libgit2Opts(Ord(TGitOption.SetHomeDir), Pansichar(utf8));
+	end;
 end;
+
 
 function GetServerConnectTimeout: Integer;
 var
