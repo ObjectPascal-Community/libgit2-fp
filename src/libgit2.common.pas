@@ -915,7 +915,7 @@ var
 	StrArray: TGitStrArray;
 	i: Integer;
 begin
-	FillChar(StrArray, SizeOf(StrArray), 0);
+	StrArray := Default(TGitStrArray);
 
 	Result := Libgit2Opts(Ord(TGitOption.GetExtensions), @StrArray);
 	if Result = 0 then
@@ -942,6 +942,11 @@ var
 	CExtensions: array of Pansichar;
 	i: Integer;
 begin
+	if Length(extensions) = 0 then
+	begin
+		Exit(Libgit2Opts(Ord(TGitOption.SetExtensions), nil, 0));
+	end;
+
 	SetLength(UTF8Strings, Length(extensions));
 	SetLength(CExtensions, Length(extensions));
 
@@ -950,15 +955,7 @@ begin
 		UTF8Strings[i] := UTF8Encode(extensions[i]);
 		CExtensions[i] := Pansichar(UTF8Strings[i]);
 	end;
-
-	if Length(CExtensions) > 0 then
-	begin
-		Result := Libgit2Opts(Ord(TGitOption.SetExtensions), @CExtensions[0], Length(CExtensions));
-	end
-	else
-	begin
-		Result := Libgit2Opts(Ord(TGitOption.SetExtensions), nil, 0);
-	end;
+	Result := Libgit2Opts(Ord(TGitOption.SetExtensions), @CExtensions[0], Length(CExtensions));
 end;
 
 function GetOwnerValidation: Boolean;
