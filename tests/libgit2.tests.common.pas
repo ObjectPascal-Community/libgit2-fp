@@ -53,7 +53,8 @@ type
 		procedure TestSetGetPackMaxObjects;
 		procedure TestSetGetODBPriority;
 		procedure TestSetGetExtensions;
-      procedure TestSetGetOwnerValidation;
+		procedure TestSetGetOwnerValidation;
+		procedure TestSetGetHomeDirectory;
 	end;
 
 implementation
@@ -970,6 +971,138 @@ begin
 	SetOwnerValidation(original);
 	CheckEquals(original, GetOwnerValidation, 'OwnerValidation was not restored properly');
 end;
+
+procedure TTestCommon.TestSetGetHomeDirectory;
+var
+	original, actual: String;
+	originalParts, actualParts: TStringList;
+	testPath, unicodePath, nonExistentPath: String;
+
+	procedure SplitPaths(const pathList: String; out parts: TStringList);
+	var
+		delimiter: Char;
+	begin
+		parts := TStringList.Create;
+		try
+			delimiter := GIT_PATH_LIST_SEPARATOR;
+			parts.StrictDelimiter := True;
+			parts.delimiter := delimiter;
+			if pathList <> '' then
+			begin
+				parts.DelimitedText := pathList;
+			end
+			else
+			begin
+				parts.Clear;
+			end;
+		except
+			parts.Free;
+			raise;
+		end;
+	end;
+
+	procedure CheckPathsExist(const parts: TStringList; const Msg: String);
+	var
+		i: Integer;
+	begin
+		for i := 0 to parts.Count - 1 do
+		begin
+			CheckTrue(
+				DirectoryExists(parts[i]) or FileExists(parts[i]),
+				Format('%s: Path does not exist: %s', [Msg, parts[i]])
+				);
+		end;
+	end;
+
+	procedure CleanupDir(const dir: String);
+	begin
+		if DirectoryExists(dir) then
+		begin
+			CheckTrue(RemoveDir(dir), 'Failed to remove directory: ' + dir);
+		end;
+	end;
+
+begin
+	CheckEquals(0, GetHomeDirectory(original), 'GetHomeDirectory (original) failed');
+	CheckNotEquals('', original, 'Original home directory string is empty');
+
+	SplitPaths(original, originalParts);
+	try
+		CheckTrue(originalParts.Count > 0, 'Original home directory list is empty');
+		CheckPathsExist(originalParts, 'Original home directory');
+	finally
+		originalParts.Free;
+	end;
+
+	testPath := IncludeTrailingPathDelimiter(GetTempDir) + 'libgit2_test_home';
+	CheckTrue(ForceDirectories(testPath), 'Failed to create test directory');
+	CheckTrue(DirectoryExists(testPath), 'Test directory does not exist after creation');
+
+	unicodePath := IncludeTrailingPathDelimiter(GetTempDir) + 'hømê-Üñïçødë';
+	CheckTrue(ForceDirectories(unicodePath), 'Failed to create unicode directory');
+	CheckTrue(DirectoryExists(unicodePath), 'Unicode directory does not exist after creation');
+
+	nonExistentPath := IncludeTrailingPathDelimiter(GetTempDir) + 'libgit2_nonexistent_home';
+	CleanupDir(nonExistentPath);
+	CheckFalse(DirectoryExists(nonExistentPath), 'Nonexistent path unexpectedly exists');
+
+	try
+		CheckEquals(0, SetHomeDirectory(testPath), 'SetHomeDirectory (test path) failed');
+		CheckEquals(0, GetHomeDirectory(actual), 'GetHomeDirectory (after set test path) failed');
+		SplitPaths(actual, actualParts);
+		try
+			CheckEquals(1, actualParts.Count, 'Expected one home directory after setting single path');
+			CheckTrue(SameText(testPath, ExcludeTrailingPathDelimiter(actualParts[0])),
+				'Home directory does not match test path');
+		finally
+			actualParts.Free;
+		end;
+
+		CheckEquals(0, SetHomeDirectory(unicodePath), 'SetHomeDirectory (unicode path) failed');
+		CheckEquals(0, GetHomeDirectory(actual), 'GetHomeDirectory (after set unicode) failed');
+		SplitPaths(actual, actualParts);
+		try
+			CheckEquals(1, actualParts.Count, 'Expected one home directory after setting unicode path');
+			CheckTrue(SameText(unicodePath, ExcludeTrailingPathDelimiter(actualParts[0])),
+				'Home directory does not match unicode path');
+		finally
+			actualParts.Free;
+		end;
+
+		CheckEquals(0, SetHomeDirectory(nonExistentPath), 'SetHomeDirectory (nonexistent path) failed');
+		CheckEquals(0, GetHomeDirectory(actual), 'GetHomeDirectory (after set nonexistent) failed');
+		SplitPaths(actual, actualParts);
+		try
+			CheckEquals(1, actualParts.Count, 'Expected one home directory after setting nonexistent path');
+			CheckTrue(SameText(nonExistentPath, ExcludeTrailingPathDelimiter(actualParts[0])),
+				'Home directory does not match nonexistent path');
+		finally
+			actualParts.Free;
+		end;
+
+		CheckEquals(0, SetHomeDirectory(''), 'SetHomeDirectory (reset) failed');
+		CheckEquals(0, GetHomeDirectory(actual), 'GetHomeDirectory (after reset) failed');
+		SplitPaths(actual, actualParts);
+		try
+			CheckTrue(actualParts.Count > 0, 'Reset home directory list is empty');
+			CheckPathsExist(actualParts, 'Reset home directory');
+		finally
+			actualParts.Free;
+		end;
+
+	finally
+		CleanupDir(testPath);
+		CleanupDir(unicodePath);
+	end;
+
+	CheckEquals(0, SetHomeDirectory(original), 'Restoring original home directory failed');
+	CheckEquals(0, GetHomeDirectory(actual), 'Verifying restored home directory failed');
+	CheckTrue(SameText(ExcludeTrailingPathDelimiter(original), ExcludeTrailingPathDelimiter(actual)),
+		'Restored home directory does not match original');
+end;
+
+
+
 
 initialization
 	RegisterTest(TTestCommon);
