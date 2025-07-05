@@ -386,6 +386,15 @@ const
 		end;
 	end;
 
+	procedure CheckPathsEqual(const expected, actual, LabelMsg: String);
+	begin
+		CheckEquals(
+			ExcludeTrailingPathDelimiter(expected),
+			ExcludeTrailingPathDelimiter(actual),
+			Format('%s: path mismatch. Expected "%s", got "%s"', [LabelMsg, expected, actual])
+			);
+	end;
+
 	procedure TestLevelPath(const level: TGitConfigLevel);
 	var
 		levelName: String;
@@ -394,24 +403,23 @@ const
 		levelName := GetEnumName(TypeInfo(TGitConfigLevel), Ord(level));
 		testPath  := Format('%s_%d', [TestBasePath, Ord(level)]);
 
-		CheckLibgit2(GetSearchPath(level, originalPath), Format('[%s] GetSearchPath (original)', [levelName]));
-		CheckLibgit2(SetSearchPath(level, testPath), Format('[%s] SetSearchPath', [levelName]));
+		CheckLibgit2(GetSearchPath(level, originalPath), Format('[%s] Get original path', [levelName]));
 
-		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after set)', [levelName]));
-		CheckEquals(testPath, actualPath, Format('[%s] Set path mismatch', [levelName]));
+		CheckLibgit2(SetSearchPath(level, testPath), Format('[%s] Set test path', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] Get path after set', [levelName]));
+		CheckPathsEqual(testPath, actualPath, Format('[%s] After SetSearchPath', [levelName]));
 
 		appendedPath := actualPath + PathSeparator + testPath;
-		CheckLibgit2(SetSearchPath(level, appendedPath), Format('[%s] SetSearchPath (append)', [levelName]));
-
-		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after append)', [levelName]));
-		CheckEquals(appendedPath, actualPath, Format('[%s] Appended path mismatch', [levelName]));
+		CheckLibgit2(SetSearchPath(level, appendedPath), Format('[%s] Set appended path', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] Get path after append', [levelName]));
+		CheckPathsEqual(appendedPath, actualPath, Format('[%s] After appending', [levelName]));
 
 		CheckLibgit2(ResetSearchPath(level), Format('[%s] ResetSearchPath', [levelName]));
-		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] GetSearchPath (after reset)', [levelName]));
+		CheckLibgit2(GetSearchPath(level, actualPath), Format('[%s] Get path after reset', [levelName]));
 
 		if level <> TGitConfigLevel.System then
 		begin
-			CheckEquals(originalPath, actualPath, Format('[%s] Reset did not restore path', [levelName]));
+			CheckPathsEqual(originalPath, actualPath, Format('[%s] After reset (expecting original)', [levelName]));
 		end;
 	end;
 

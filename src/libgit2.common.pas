@@ -414,36 +414,49 @@ var
 	Buffer: TGitBuf;
 begin
 	Buffer := GitInitBuf;
-	FillChar(Buffer, SizeOf(Buffer), 0);
-
-	Result := Libgit2Opts(Ord(TGitOption.GetSearchPath), Ord(level), @Buffer);
-	if Result = 0 then
-	begin
-		if Buffer.Ptr <> nil then
+	try
+		Result := Libgit2Opts(Ord(TGitOption.GetSearchPath), Ord(level), @Buffer);
+		if Result = 0 then
 		begin
-			path := String(Ansistring(Buffer.Ptr));
+			if Buffer.Ptr <> nil then
+			begin
+				path := UTF8ToString(Utf8string(Buffer.Ptr));
+			end
+			else
+			begin
+				path := '';
+			end;
 		end
 		else
 		begin
 			path := '';
 		end;
-
+	finally
 		DisposeBuffer(Buffer);
-	end
-	else
-	begin
-		path := '';
 	end;
 end;
 
 function SetSearchPath(const level: TGitConfigLevel; const path: String): Integer;
+var
+	pPath:	 Pansichar;
+	utf8Path: Utf8string;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), Pansichar(UTF8Encode(path)));
+	if path = '' then
+	begin
+		pPath := nil;
+	end
+	else
+	begin
+		utf8Path := UTF8Encode(path);
+		pPath	 := Pansichar(utf8Path);
+	end;
+
+	Result := Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), pPath);
 end;
 
 function ResetSearchPath(const level: TGitConfigLevel): Integer;
 begin
-	Result := Libgit2Opts(Ord(TGitOption.SetSearchPath), Ord(level), nil);
+	Result := SetSearchPath(level, '');
 end;
 
 function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
@@ -547,10 +560,10 @@ end;
 
 function SetTemplatePath(const path: String): Integer;
 var
-	Utf8Path: Utf8string;
+	utf8Path: Utf8string;
 begin
-	Utf8Path := UTF8Encode(path);
-	Result	:= Libgit2Opts(Ord(TGitOption.SetTemplatePath), Pansichar(Utf8Path));
+	utf8Path := UTF8Encode(path);
+	Result	:= Libgit2Opts(Ord(TGitOption.SetTemplatePath), Pansichar(utf8Path));
 end;
 
 function SetSSLCertLocations(const filename, path: String): Integer;
