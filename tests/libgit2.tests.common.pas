@@ -513,44 +513,45 @@ end;
 procedure TTestCommon.TestTemplatePath;
 var
 	originalPath, testPath, actualPath: String;
-	res: Integer;
+	Success: Boolean;
 begin
 	// TODO: test more potential failure points
 
-	res := GetTemplatePath(originalPath);
-	CheckEquals(0, res, 'GetTemplatePath failed');
+	Success := TryGetTemplatePath(originalPath);
+	CheckTrue(Success, 'TryGetTemplatePath failed');
 
 	testPath := 'C:\fake\template\path';
-	res		:= SetTemplatePath(testPath);
-	CheckEquals(0, res, 'SetTemplatePath failed for ASCII path');
+	Success  := TrySetTemplatePath(testPath);
+	CheckTrue(Success, 'TrySetTemplatePath failed for ASCII path');
 
-	res := GetTemplatePath(actualPath);
-	CheckEquals(0, res, 'GetTemplatePath after set failed for ASCII path');
-	CheckEquals(testPath, actualPath, 'SetTemplatePath did not update ASCII path correctly');
+	Success := TryGetTemplatePath(actualPath);
+	CheckTrue(Success, 'TryGetTemplatePath after set failed for ASCII path');
+	CheckEquals(testPath, actualPath, 'TrySetTemplatePath did not update ASCII path correctly');
 
 	testPath := 'C:\fäke\templäte\路径';
-	res		:= SetTemplatePath(testPath);
-	CheckEquals(0, res, 'SetTemplatePath failed for UTF-8 path');
+	Success  := TrySetTemplatePath(testPath);
+	CheckTrue(Success, 'TrySetTemplatePath failed for UTF-8 path');
 
-	res := GetTemplatePath(actualPath);
-	CheckEquals(0, res, 'GetTemplatePath after set failed for UTF-8 path');
-	CheckEquals(testPath, actualPath, 'SetTemplatePath did not update UTF-8 path correctly');
+	Success := TryGetTemplatePath(actualPath);
+	CheckTrue(Success, 'TryGetTemplatePath after set failed for UTF-8 path');
+	CheckEquals(testPath, actualPath, 'TrySetTemplatePath did not update UTF-8 path correctly');
 
 	testPath := '';
-	res		:= SetTemplatePath(testPath);
-	CheckEquals(0, res, 'SetTemplatePath failed for empty path');
+	Success  := TrySetTemplatePath(testPath);
+	CheckTrue(Success, 'TrySetTemplatePath failed for empty path');
 
-	res := GetTemplatePath(actualPath);
-	CheckEquals(0, res, 'GetTemplatePath after set failed for empty path');
-	CheckEquals(testPath, actualPath, 'SetTemplatePath did not update empty path correctly');
+	Success := TryGetTemplatePath(actualPath);
+	CheckTrue(Success, 'TryGetTemplatePath after set failed for empty path');
+	CheckEquals(testPath, actualPath, 'TrySetTemplatePath did not update empty path correctly');
 
-	res := SetTemplatePath(originalPath);
-	CheckEquals(0, res, 'SetTemplatePath failed to restore original path');
+	Success := TrySetTemplatePath(originalPath);
+	CheckTrue(Success, 'TrySetTemplatePath failed to restore original path');
 
-	res := GetTemplatePath(actualPath);
-	CheckEquals(0, res, 'GetTemplatePath after restore failed');
+	Success := TryGetTemplatePath(actualPath);
+	CheckTrue(Success, 'TryGetTemplatePath after restore failed');
 	CheckEquals(originalPath, actualPath, 'Restore of template path did not work');
 end;
+
 
 procedure TTestCommon.TestSetSSLCertLocations;
 var

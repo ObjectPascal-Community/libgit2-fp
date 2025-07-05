@@ -97,8 +97,8 @@ function EnableCaching: Boolean;
 function DisableCaching: Boolean;
 procedure GetCachedMemory(out current, allowed: ssize_t);
 
-function GetTemplatePath(out path: String): Integer;
-function SetTemplatePath(const path: String): Integer;
+function TryGetTemplatePath(out path: String): Boolean;
+function TrySetTemplatePath(const path: String): Boolean;
 
 function SetSSLCertLocations(const filename, path: String): Integer;
 function AddSSLX509Cert(const cert: Pointer): Integer;
@@ -115,6 +115,7 @@ type
 
 function SetWindowsShareMode(const mode: TWindowsShareMode): Integer;
 function GetWindowsShareMode(out mode: TWindowsShareMode): Integer;
+
 {$ENDIF}
 
 procedure SetSSLCiphers(const ciphers: String);
@@ -531,22 +532,23 @@ begin
 	Libgit2Opts(Ord(TGitOption.GetCachedMemory), @current, @allowed);
 end;
 
-function GetTemplatePath(out path: String): Integer;
+function GetTemplatePathInternal(out path: String): Integer;
 var
 	Buffer: TGitBuf;
 begin
-	Buffer := GitInitBuf;
-	Result := Libgit2Opts(Ord(TGitOption.GetTemplatePath), @Buffer);
-	if Result <> 0 then
-	begin
-		path := '';
-		Exit;
-	end;
-
+	Buffer := Default(TGitBuf);
 	try
-		if Buffer.Ptr <> nil then
+		Result := Libgit2Opts(Ord(TGitOption.GetTemplatePath), @Buffer);
+		if Result = 0 then
 		begin
-			path := UTF8ToString(Buffer.Ptr);
+			if Buffer.Ptr <> nil then
+			begin
+				path := UTF8ToString(Ansistring(Buffer.Ptr));
+			end
+			else
+			begin
+				path := '';
+			end;
 		end
 		else
 		begin
@@ -557,12 +559,23 @@ begin
 	end;
 end;
 
-function SetTemplatePath(const path: String): Integer;
+function SetTemplatePathInternal(const path: String): Integer;
 var
 	utf8Path: Utf8string;
 begin
 	utf8Path := UTF8Encode(path);
 	Result	:= Libgit2Opts(Ord(TGitOption.SetTemplatePath), Pansichar(utf8Path));
+end;
+
+
+function TryGetTemplatePath(out path: String): Boolean;
+begin
+	Result := (GetTemplatePathInternal(path) = 0);
+end;
+
+function TrySetTemplatePath(const path: String): Boolean;
+begin
+	Result := (SetTemplatePathInternal(path) = 0);
 end;
 
 function SetSSLCertLocations(const filename, path: String): Integer;
