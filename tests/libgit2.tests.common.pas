@@ -179,13 +179,38 @@ const
 
 procedure TTestCommon.TestGetFeatureBackends;
 var
-	features: TGitFeatures;
-	feature: TGitFeature;
-	backend: String;
+	features:	 TGitFeatures;
+	feature:	  TGitFeature;
+	backend:	  String;
 	allowedList: TStringArray;
 	featureName: String;
-	left, right, mid, cmp: Integer;
-	found: Boolean;
+
+	function StringBinarySearch(const List: TStringArray; const Value: String): Boolean;
+	var
+		Left, Right, Pivot, Cmp: Integer;
+	begin
+		Left  := 0;
+		Right := High(List);
+		while Left <= Right do
+		begin
+			Pivot := (Left + Right) div 2;
+			Cmp	:= AnsiCompareText(Value, List[Pivot]);
+			if Cmp = 0 then
+			begin
+				Exit(True);
+			end
+			else if Cmp < 0 then
+			begin
+				Right := Pivot - 1;
+			end
+			else
+			begin
+				Left := Pivot + 1;
+			end;
+		end;
+		Result := False;
+	end;
+
 begin
 	features := GetFeatures;
 
@@ -197,51 +222,23 @@ begin
 		if feature in features then
 		begin
 			CheckNotEquals('', backend,
-				Format('Enabled feature %s has empty backend', [featureName])
-				);
+				Format('Enabled feature %s has empty backend', [featureName]));
 
 			allowedList := allowedBackends[feature];
-			if Length(allowedList) = 0 then
-			begin
-				Fail(Format('No allowed backends specified for feature %s', [featureName]));
-				Continue;
-			end;
+			CheckTrue(Length(allowedList) > 0,
+				Format('No allowed backends specified for feature %s', [featureName]));
 
-			left  := 0;
-			right := High(allowedList);
-			found := False;
-			while left <= right do
-			begin
-				mid := (left + right) div 2;
-				cmp := AnsiCompareText(backend, allowedList[mid]);
-				if cmp = 0 then
-				begin
-					found := True;
-					Break;
-				end
-				else if cmp < 0 then
-				begin
-					right := mid - 1;
-				end
-				else
-				begin
-					left := mid + 1;
-				end;
-			end;
-
-			CheckTrue(found,
-				Format('Backend "%s" for feature %s is not in the allowed list', [backend, featureName])
-				);
+			CheckTrue(StringBinarySearch(allowedList, backend),
+				Format('Backend "%s" for feature %s is not in the allowed list', [backend, featureName]));
 		end
 		else
 		begin
-			CheckTrue(
-				backend = '',
-				Format('Disabled feature %s unexpectedly has backend "%s"', [featureName, backend])
-				);
+			CheckEquals('', backend,
+				Format('Disabled feature %s unexpectedly has backend "%s"', [featureName, backend]));
 		end;
 	end;
 end;
+
 
 procedure TTestCommon.TestCheckGetMaximumWindowSize;
 var
