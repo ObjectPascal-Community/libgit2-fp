@@ -119,7 +119,6 @@ function GetWindowsShareMode(out mode: TWindowsShareMode): Integer;
 
 procedure SetSSLCiphers(const ciphers: String);
 
-
 procedure EnableStrictObjectCreation;
 procedure DisableStrictObjectCreation;
 function IsStrictObjectCreationEnabled: Boolean;
@@ -152,7 +151,6 @@ procedure EnableHttpExpectContinue;
 procedure DisableHttpExpectContinue;
 function IsHttpExpectContinueEnabled: Boolean;
 
-
 function GetPackMaxObjects: size_t;
 procedure SetPackMaxObjects(const objects: size_t);
 
@@ -160,6 +158,8 @@ function SetAllocator(allocator: PGitAllocator): Integer;
 
 procedure SetODBPackedPriority(const priority: Integer);
 procedure SetODBLoosePriority(const priority: Integer);
+function GetODBPackedPriority: Integer;
+function GetODBLoosePriority: Integer;
 
 function GetExtensions(out extensions: TStringArray): Integer;
 function SetExtensions(const extensions: TStringArray): Integer;
@@ -196,6 +196,8 @@ var
 		0	  // RefDelta
 		);
 	CacheMaxSize:		ssize_t = 256 * 1024 * 1024; // 256 MB, as per the docs
+	ODBLoosePriority:  Integer = 1;
+	ODBPackedPriority: Integer = 2;
 
 
 type
@@ -601,7 +603,6 @@ begin
 	end;
 end;
 
-
 function SetUserAgentProduct(const userAgentProduct: String): Integer;
 var
 	utf8: Ansistring;
@@ -640,7 +641,6 @@ begin
 		userAgentProduct := '';
 	end;
 end;
-
 
 {$IF DEFINED(WINDOWS)}
 function SetWindowsShareMode(const mode: TWindowsShareMode): Integer;
@@ -682,7 +682,6 @@ begin
 		StrictObjectCreationEnabled := Enabled;
 	end;
 end;
-
 
 procedure EnableStrictSymbolicRefCreationInternal(const Enabled: Boolean);
 begin
@@ -885,12 +884,30 @@ end;
 
 procedure SetODBPackedPriority(const priority: Integer);
 begin
-	Libgit2Opts(Ord(TGitOption.SetODBPackedPriority), priority);
+	if ODBPackedPriority <> priority then
+	begin
+		Libgit2Opts(Ord(TGitOption.SetODBPackedPriority), priority);
+		ODBPackedPriority := priority;
+	end;
 end;
 
 procedure SetODBLoosePriority(const priority: Integer);
 begin
-	Libgit2Opts(Ord(TGitOption.SetODBLoosePriority), priority);
+	if ODBLoosePriority <> priority then
+	begin
+		Libgit2Opts(Ord(TGitOption.SetODBLoosePriority), priority);
+		ODBLoosePriority := priority;
+	end;
+end;
+
+function GetODBPackedPriority: Integer;
+begin
+	Result := ODBPackedPriority;
+end;
+
+function GetODBLoosePriority: Integer;
+begin
+	Result := ODBLoosePriority;
 end;
 
 function GetExtensions(out extensions: TStringArray): Integer;
