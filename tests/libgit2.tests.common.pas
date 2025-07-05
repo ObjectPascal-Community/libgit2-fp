@@ -59,6 +59,8 @@ type
 		procedure TestSetGetUserAgentProductUnicode;
 
 		procedure TestAllFeatureToggles;
+
+		procedure TestSetGetPackMaxObjects;
 	end;
 
 implementation
@@ -781,6 +783,24 @@ begin
 		toggle.EnableProc;
 		CheckTrue(toggle.IsEnabledFunc(), toggle.Name + ' should be enabled');
 	end;
+end;
+
+procedure TTestCommon.TestSetGetPackMaxObjects;
+var
+	original, testValue, readBack: size_t;
+begin
+	original := GetPackMaxObjects;
+
+	testValue := 123456;
+	SetPackMaxObjects(testValue);
+
+	readBack := GetPackMaxObjects;
+	CheckEquals(testValue, readBack, 'GetPackMaxObjects did not return the set value');
+
+	SetPackMaxObjects(original);
+
+	readBack := GetPackMaxObjects;
+	CheckEquals(original, readBack, 'Original PackMaxObjects value was not restored');
 end;
 
 
