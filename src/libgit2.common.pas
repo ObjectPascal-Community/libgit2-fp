@@ -170,11 +170,11 @@ procedure SetOwnerValidation(const Enabled: Boolean);
 function GetHomeDirectory(out path: String): Integer;
 function SetHomeDirectory(const path: String): Integer;
 
-function GetServerConnectTimeout: Integer;
-function SetServerConnectTimeout(const timeoutMs: Integer): Integer;
+function TryGetServerConnectTimeout(out timeoutMs: Integer): Boolean;
+function TrySetServerConnectTimeout(timeoutMs: Integer): Boolean;
 
-function GetServerTimeout: Integer;
-function SetServerTimeout(const timeoutMs: Integer): Integer;
+function TryGetServerTimeout(out timeoutMs: Integer): Boolean;
+function TrySetServerTimeout(timeoutMs: Integer): Boolean;
 
 implementation
 
@@ -1021,52 +1021,32 @@ begin
 end;
 
 
-function GetServerConnectTimeout: Integer;
-var
-	timeout: Integer;
+function TryGetServerConnectTimeout(out timeoutMs: Integer): Boolean;
 begin
-	if Libgit2Opts(Ord(TGitOption.GetServerConnectTimeout), @timeout) = 0 then
-	begin
-		Result := timeout;
-	end
-	else
-	begin
-		Result := -1;
-	end;
+	Result := Libgit2Opts(Ord(TGitOption.GetServerConnectTimeout), @timeoutMs) = 0;
 end;
 
-function SetServerConnectTimeout(const timeoutMs: Integer): Integer;
+function TrySetServerConnectTimeout(timeoutMs: Integer): Boolean;
 begin
 	if timeoutMs < 0 then
 	begin
-		Exit(-1);
+		Exit(False);
 	end;
-
-	Result := Libgit2Opts(Ord(TGitOption.SetServerConnectTimeout), timeoutMs);
+	Result := Libgit2Opts(Ord(TGitOption.SetServerConnectTimeout), timeoutMs) = 0;
 end;
 
-function GetServerTimeout: Integer;
-var
-	timeout: Integer;
+function TryGetServerTimeout(out timeoutMs: Integer): Boolean;
 begin
-	if Libgit2Opts(Ord(TGitOption.GetServerTimeout), @timeout) = 0 then
-	begin
-		Result := timeout;
-	end
-	else
-	begin
-		Result := -1;
-	end;
+	Result := Libgit2Opts(Ord(TGitOption.GetServerTimeout), @timeoutMs) = 0;
 end;
 
-function SetServerTimeout(const timeoutMs: Integer): Integer;
+function TrySetServerTimeout(timeoutMs: Integer): Boolean;
 begin
 	if timeoutMs < 0 then
 	begin
-		Exit(-1);
+		Exit(False);
 	end;
-
-	Result := Libgit2Opts(Ord(TGitOption.SetServerTimeout), timeoutMs);
+	Result := Libgit2Opts(Ord(TGitOption.SetServerTimeout), timeoutMs) = 0;
 end;
 
 end.
