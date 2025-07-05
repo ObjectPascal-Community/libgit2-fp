@@ -87,11 +87,11 @@ type
 		RefDelta
 		);
 
-function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
-function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
+function TryGetCacheObjectLimit(const ObjectType: TGitObjectType; out Limit: size_t): Boolean;
+function TrySetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
 
 function GetCacheObjectMaxSize: ssize_t;
-function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
+function TrySetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
 
 function EnableCaching: Boolean;
 function DisableCaching: Boolean;
@@ -461,10 +461,10 @@ end;
 
 function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
 begin
-	Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid);
+	Result := ObjectType in [TGitObjectType.Any, TGitObjectType.Invalid];
 end;
 
-function SetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
+function TrySetCacheObjectLimit(const ObjectType: TGitObjectType; const CacheSize: size_t): Boolean;
 const
 	CValues: array[TGitObjectType] of Integer = ( // .
 		-2,  // Any
@@ -490,7 +490,7 @@ begin
 	end;
 end;
 
-function SetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
+function TrySetCacheObjectMaxSize(const MaxStorageBytes: ssize_t): Boolean;
 begin
 	Result := Libgit2Opts(Ord(TGitOption.SetCacheMaxSize), MaxStorageBytes) = 0;
 	if Result then
@@ -499,17 +499,16 @@ begin
 	end;
 end;
 
-function GetCacheObjectLimit(const ObjectType: TGitObjectType): size_t;
+function TryGetCacheObjectLimit(const ObjectType: TGitObjectType; out Limit: size_t): Boolean;
 begin
 	if IsInvalidObjectType(ObjectType) then
 	begin
-		Result := High(size_t);
+		Result := False;
 		Exit;
-	end
-	else
-	begin
-		Result := CacheObjectLimits[ObjectType];
 	end;
+
+	Limit  := CacheObjectLimits[ObjectType];
+	Result := True;
 end;
 
 function GetCacheObjectMaxSize: ssize_t;
