@@ -1,6 +1,6 @@
 unit LibGit2.Buffer;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$modeswitch advancedrecords}
 
 interface
 
@@ -17,22 +17,46 @@ type
 		Size:	  size_t;
 	end;
 
-const
-	GitInitBuf: TGitBuf = (Ptr: nil; Reserved: 0; Size: 0);
-
-procedure DisposeBuffer(var Buffer: TGitBuf);
+	TGitBufHelper = record helper for TGitBuf
+		procedure Dispose;
+		function ToString: String;
+		function Length: size_t;
+		function IsEmpty: Boolean;
+	end;
 
 implementation
 
 procedure Libgit2BufferDispose(Buffer: PGitBuf); cdecl; external LibGit2Dll name 'git_buf_dispose';
 
-procedure DisposeBuffer(var Buffer: TGitBuf);
+procedure TGitBufHelper.Dispose;
 begin
-	if Buffer.Ptr <> nil then
+	if Self.Ptr <> nil then
 	begin
-		Libgit2BufferDispose(@Buffer);
-		FillChar(Buffer, SizeOf(Buffer), 0);
+		Libgit2BufferDispose(@Self);
+		Self := Default(TGitBuf);
 	end;
+end;
+
+function TGitBufHelper.ToString: String;
+begin
+	if Ptr = nil then
+	begin
+		Result := '';
+	end
+	else
+	begin
+		Result := StrPas(Ptr);
+	end;
+end;
+
+function TGitBufHelper.Length: size_t;
+begin
+	Result := Size;
+end;
+
+function TGitBufHelper.IsEmpty: Boolean;
+begin
+	Result := (Ptr = nil) or (Size = 0);
 end;
 
 end.

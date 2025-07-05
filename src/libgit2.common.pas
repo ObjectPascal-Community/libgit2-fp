@@ -414,7 +414,7 @@ function GetSearchPath(const level: TGitConfigLevel; out path: String): Integer;
 var
 	Buffer: TGitBuf;
 begin
-	Buffer := GitInitBuf;
+	Buffer := Default(TGitBuf);
 	try
 		Result := Libgit2Opts(Ord(TGitOption.GetSearchPath), Ord(level), @Buffer);
 		if Result = 0 then
@@ -433,7 +433,7 @@ begin
 			path := '';
 		end;
 	finally
-		DisposeBuffer(Buffer);
+		Buffer.Dispose;
 	end;
 end;
 
@@ -555,7 +555,7 @@ begin
 			path := '';
 		end;
 	finally
-		DisposeBuffer(Buffer);
+		Buffer.Dispose;
 	end;
 end;
 
@@ -608,7 +608,7 @@ function GetUserAgent(out userAgent: String): Integer;
 var
 	buf: TGitBuf;
 begin
-	FillChar(buf, SizeOf(buf), 0);
+	buf	 := Default(TGitBuf);
 	Result := Libgit2Opts(Ord(TGitOption.GetUserAgent), @buf);
 	if Result = 0 then
 	begin
@@ -620,7 +620,7 @@ begin
 		begin
 			userAgent := '';
 		end;
-		DisposeBuffer(buf);
+		buf.Dispose;
 	end
 	else
 	begin
@@ -647,7 +647,8 @@ function GetUserAgentProduct(out userAgentProduct: String): Integer;
 var
 	buf: TGitBuf;
 begin
-	FillChar(buf, SizeOf(buf), 0);
+	buf := Default(TGitBuf);
+
 	Result := Libgit2Opts(Ord(TGitOption.GetUserAgentProduct), @buf);
 	if Result = 0 then
 	begin
@@ -659,7 +660,7 @@ begin
 		begin
 			userAgentProduct := '';
 		end;
-		DisposeBuffer(buf);
+		buf.Dispose;
 	end
 	else
 	begin
@@ -938,7 +939,6 @@ end;
 function GetExtensions(out extensions: TStringArray): Integer;
 var
 	StrArray: TGitStrArray;
-	i: Integer;
 begin
 	StrArray := Default(TGitStrArray);
 
@@ -946,20 +946,17 @@ begin
 	if Result = 0 then
 	begin
 		try
-			SetLength(extensions, StrArray.Count);
-			for i := 0 to StrArray.Count - 1 do
-			begin
-				extensions[i] := UTF8ToString(StrArray.strings[i]);
-			end;
+			extensions := StrArray.ToArray;
 		finally
-			DisposeStrArray(StrArray);
+			StrArray.Dispose;
 		end;
 	end
 	else
 	begin
-		SetLength(extensions, 0);
+		extensions := nil;
 	end;
 end;
+
 
 function SetExtensions(const extensions: TStringArray): Integer;
 var
@@ -1018,7 +1015,7 @@ begin
 				path := '';
 			end;
 		finally
-			DisposeBuffer(Buffer);
+			Buffer.Dispose;
 		end;
 	end
 	else
