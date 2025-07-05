@@ -61,6 +61,8 @@ type
 		procedure TestAllFeatureToggles;
 
 		procedure TestSetGetPackMaxObjects;
+
+		procedure TestSetGetODBPriority;
 	end;
 
 implementation
@@ -790,8 +792,8 @@ var
 	original, testValue, readBack: size_t;
 begin
 	original := GetPackMaxObjects;
-   CheckTrue(original <= UINT32_MAX, 'Pack max object limit is bigger than UINT32_MAX');
-   CheckTrue(original <> 0, 'Pack max object limit is zero');
+	CheckTrue(original <= UINT32_MAX, 'Pack max object limit is bigger than UINT32_MAX');
+	CheckTrue(original <> 0, 'Pack max object limit is zero');
 
 	testValue := 123456;
 	SetPackMaxObjects(testValue);
@@ -805,6 +807,31 @@ begin
 	CheckEquals(original, readBack, 'Original PackMaxObjects value was not restored');
 end;
 
+procedure TTestCommon.TestSetGetODBPriority;
+var
+	originalPacked, originalLoose: Integer;
+begin
+	originalPacked := GetODBPackedPriority;
+	CheckEquals(2, originalPacked, 'Expected default packed priority = 2. Has the DLL changed?');
+
+	originalLoose := GetODBLoosePriority;
+	CheckEquals(1, originalLoose, 'Expected default loose priority = 1. Has the DLL changed?');
+
+	SetODBPackedPriority(20);
+	CheckEquals(20, GetODBPackedPriority, 'Packed priority was not updated to 20');
+
+	SetODBLoosePriority(10);
+	CheckEquals(10, GetODBLoosePriority, 'Loose priority was not updated to 10');
+
+	SetODBPackedPriority(20);
+	CheckEquals(20, GetODBPackedPriority, 'Packed priority changed unexpectedly on re-set');
+
+	SetODBPackedPriority(originalPacked);
+	CheckEquals(originalPacked, GetODBPackedPriority, 'Failed to restore original packed priority');
+
+	SetODBLoosePriority(originalLoose);
+	CheckEquals(originalLoose, GetODBLoosePriority, 'Failed to restore original loose priority');
+end;
 
 initialization
 	RegisterTest(TTestCommon);
