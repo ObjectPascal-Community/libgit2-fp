@@ -1106,62 +1106,95 @@ end;
 procedure TTestCommon.TestSetGetServerTimeout;
 var
 	originalTimeout, newTimeout: Integer;
-	retCode: Integer;
+	Success: Boolean;
 begin
-	originalTimeout := GetServerTimeout;
+	Success := TryGetServerTimeout(originalTimeout);
+	CheckTrue(Success, 'Failed to get original server timeout');
 	CheckFalse(originalTimeout < 0, 'Original server timeout should be non-negative');
 	CheckEquals(0, originalTimeout, 'Original server timeout should be 0 (did you change the defaults?)');
 
 	newTimeout := originalTimeout + 10;
-	retCode	 := SetServerTimeout(newTimeout);
-	CheckEquals(0, retCode, 'SetServerTimeout should succeed for non-negative value');
-	CheckEquals(newTimeout, GetServerTimeout, 'GetServerTimeout should return the newly set timeout');
+	Success	 := TrySetServerTimeout(newTimeout);
+	CheckTrue(Success, 'TrySetServerTimeout should succeed for non-negative value');
 
-	retCode := SetServerTimeout(0);
-	CheckEquals(0, retCode, 'SetServerTimeout should succeed for zero timeout');
-	CheckEquals(0, GetServerTimeout, 'GetServerTimeout should return zero after setting it');
+	Success := TryGetServerTimeout(originalTimeout);
+	CheckTrue(Success, 'Failed to get server timeout after set');
+	CheckEquals(newTimeout, originalTimeout, 'Server timeout should match newly set value');
 
-	retCode := SetServerTimeout(-1);
-	CheckEquals(-1, retCode, 'SetServerTimeout should fail for negative value');
-	CheckEquals(0, GetServerTimeout, 'Timeout should remain unchanged after failed set');
+	Success := TrySetServerTimeout(0);
+	CheckTrue(Success, 'TrySetServerTimeout should succeed for zero timeout');
 
-	retCode := SetServerTimeout(GetServerTimeout);
-	CheckEquals(0, retCode, 'SetServerTimeout should succeed when setting current value');
-	CheckEquals(GetServerTimeout, GetServerTimeout, 'Timeout should be unchanged after idempotent set');
+	Success := TryGetServerTimeout(newTimeout);
+	CheckTrue(Success, 'Failed to get server timeout after zero set');
+	CheckEquals(0, newTimeout, 'Server timeout should be zero after setting it');
+
+	Success := TrySetServerTimeout(-1);
+	CheckFalse(Success, 'TrySetServerTimeout should fail for negative value');
+
+	Success := TryGetServerTimeout(newTimeout);
+	CheckTrue(Success, 'Failed to get server timeout after failed set');
+	CheckEquals(0, newTimeout, 'Server timeout should remain unchanged after failed set');
+
+	Success := TryGetServerTimeout(originalTimeout);
+	CheckTrue(Success, 'Failed to get current server timeout before idempotent set');
+	Success := TrySetServerTimeout(originalTimeout);
+	CheckTrue(Success, 'TrySetServerTimeout should succeed when setting current value');
+
+	Success := TryGetServerTimeout(newTimeout);
+	CheckTrue(Success, 'Failed to get server timeout after idempotent set');
+	CheckEquals(originalTimeout, newTimeout, 'Server timeout should be unchanged after idempotent set');
 end;
 
 procedure TTestCommon.TestSetGetServerConnectTimeout;
 var
 	originalConnectTimeout, newConnectTimeout: Integer;
-	retCode: Integer;
+	Success: Boolean;
 begin
-	originalConnectTimeout := GetServerConnectTimeout;
+	Success := TryGetServerConnectTimeout(originalConnectTimeout);
+	CheckTrue(Success, 'Failed to get original server connect timeout');
 	CheckFalse(originalConnectTimeout < 0, 'Original server connect timeout should be non-negative');
 	CheckEquals(0, originalConnectTimeout, 'Original server connect timeout should be 0 (did you change the defaults?)');
 
 	newConnectTimeout := originalConnectTimeout + 10;
-	retCode := SetServerConnectTimeout(newConnectTimeout);
-	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed for non-negative value');
-	CheckEquals(newConnectTimeout, GetServerConnectTimeout,
-		'GetServerConnectTimeout should return the newly set timeout');
+	Success := TrySetServerConnectTimeout(newConnectTimeout);
+	CheckTrue(Success, 'TrySetServerConnectTimeout should succeed for non-negative value');
 
-	retCode := SetServerConnectTimeout(0);
-	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed for zero timeout');
-	CheckEquals(0, GetServerConnectTimeout, 'GetServerConnectTimeout should return zero after setting it');
+	Success := TryGetServerConnectTimeout(originalConnectTimeout);
+	CheckTrue(Success, 'Failed to get server connect timeout after set');
+	CheckEquals(newConnectTimeout, originalConnectTimeout, 'Server connect timeout should match newly set value');
 
-	retCode := SetServerConnectTimeout(-1);
-	CheckEquals(-1, retCode, 'SetServerConnectTimeout should fail for negative value');
-	CheckEquals(0, GetServerConnectTimeout, 'Connect timeout should remain unchanged after failed set');
+	Success := TrySetServerConnectTimeout(0);
+	CheckTrue(Success, 'TrySetServerConnectTimeout should succeed for zero timeout');
 
-	retCode := SetServerConnectTimeout(GetServerConnectTimeout);
-	CheckEquals(0, retCode, 'SetServerConnectTimeout should succeed when setting current value');
-	CheckEquals(GetServerConnectTimeout, GetServerConnectTimeout,
-		'Connect timeout should be unchanged after idempotent set');
+	Success := TryGetServerConnectTimeout(newConnectTimeout);
+	CheckTrue(Success, 'Failed to get server connect timeout after zero set');
+	CheckEquals(0, newConnectTimeout, 'Server connect timeout should be zero after setting it');
 
-	retCode := SetServerConnectTimeout(originalConnectTimeout);
-	CheckEquals(0, retCode, 'Restoring original server connect timeout should succeed');
-	CheckEquals(originalConnectTimeout, GetServerConnectTimeout, 'Original server connect timeout should be restored');
+	Success := TrySetServerConnectTimeout(-1);
+	CheckFalse(Success, 'TrySetServerConnectTimeout should fail for negative value');
+
+	Success := TryGetServerConnectTimeout(newConnectTimeout);
+	CheckTrue(Success, 'Failed to get server connect timeout after failed set');
+	CheckEquals(0, newConnectTimeout, 'Server connect timeout should remain unchanged after failed set');
+
+	Success := TryGetServerConnectTimeout(originalConnectTimeout);
+	CheckTrue(Success, 'Failed to get current server connect timeout before idempotent set');
+	Success := TrySetServerConnectTimeout(originalConnectTimeout);
+	CheckTrue(Success, 'TrySetServerConnectTimeout should succeed when setting current value');
+
+	Success := TryGetServerConnectTimeout(newConnectTimeout);
+	CheckTrue(Success, 'Failed to get server connect timeout after idempotent set');
+	CheckEquals(originalConnectTimeout, newConnectTimeout,
+		'Server connect timeout should be unchanged after idempotent set');
+
+	Success := TrySetServerConnectTimeout(originalConnectTimeout);
+	CheckTrue(Success, 'Restoring original server connect timeout should succeed');
+
+	Success := TryGetServerConnectTimeout(newConnectTimeout);
+	CheckTrue(Success, 'Verifying restored server connect timeout failed');
+	CheckEquals(originalConnectTimeout, newConnectTimeout, 'Original server connect timeout should be restored');
 end;
+
 
 initialization
 	RegisterTest(TTestCommon);
