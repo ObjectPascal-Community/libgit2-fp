@@ -22,10 +22,10 @@ type
 	int32_t = cint32;
 	int64_t = cint64;
 
-	uint8_t  = cint8;
-	uint16_t = cint16;
-	uint32_t = cint32;
-	uint64_t = cint64;
+	uint8_t  = cuint8;
+	uint16_t = cuint16;
+	uint32_t = cuint32;
+	uint64_t = cuint64;
 
 (*
  * 7.18.1.2 Minimum-width integer types
@@ -84,19 +84,19 @@ const
 (*
  * 7.18.2.1 Limits of exact-width integer types
  *)
-	INT8_MIN  = int8_t(Low(int8_t));
-	INT8_MAX  = int8_t(High(int8_t));
-	INT16_MIN = int16_t(Low(int16_t));
-	INT16_MAX = int16_t(High(int16_t));
-	INT32_MIN = int32_t(Low(int32_t));
-	INT32_MAX = int32_t(High(int32_t));
-	INT64_MIN = int64_t(Low(int64_t));
-	INT64_MAX = int64_t(High(int64_t));
+	INT8_MIN  = Low(int8_t);
+	INT8_MAX  = High(int8_t);
+	INT16_MIN = Low(int16_t);
+	INT16_MAX = High(int16_t);
+	INT32_MIN = Low(int32_t);
+	INT32_MAX = High(int32_t);
+	INT64_MIN = Low(int64_t);
+	INT64_MAX = High(int64_t);
 
-	UINT8_MAX  = uint8_t(High(uint8_t));
-	UINT16_MAX = uint16_t(High(uint16_t));
-	UINT32_MAX = uint32_t(High(uint32_t));
-	UINT64_MAX = uint64_t(High(uint64_t));
+	UINT8_MAX  = High(uint8_t);
+	UINT16_MAX = High(uint16_t);
+	UINT32_MAX = High(uint32_t);
+	UINT64_MAX = High(uint64_t);
 
 (*
  * 7.18.2.2 Limits of minimum-width integer types
