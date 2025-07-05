@@ -13,7 +13,8 @@ uses
 	jsonparser,
 	testregistry,
 	LibGit2.Common,
-	LibGit2.StdInt;
+	LibGit2.StdInt,
+	Generics.Collections;
 
 type
 
@@ -63,6 +64,8 @@ type
 		procedure TestSetGetPackMaxObjects;
 
 		procedure TestSetGetODBPriority;
+
+		procedure TestSetGetExtensions;
 	end;
 
 implementation
@@ -831,6 +834,132 @@ begin
 
 	SetODBLoosePriority(originalLoose);
 	CheckEquals(originalLoose, GetODBLoosePriority, 'Failed to restore original loose priority');
+end;
+
+const
+	ExpectedBuiltinExtensions: TStringArray = (
+		'noop', 'objectformat', 'preciousobjects', 'worktreeconfig'
+		);
+
+function HasExtension(const Extensions: TStringArray; const Ext: String): Boolean;
+var
+	i: Integer;
+begin
+	Result := False;
+	for i := Low(Extensions) to High(Extensions) do
+	begin
+		if Extensions[i] = Ext then
+		begin
+			Exit(True);
+		end;
+	end;
+end;
+
+procedure CheckExtensionsContain(Test: TTestCase; const Extensions: TStringArray; const expected: array of String);
+var
+	i: Integer;
+begin
+	for i := Low(expected) to High(expected) do
+	begin
+		Test.CheckTrue(HasExtension(Extensions, expected[i]), Format('Missing builtin extension: %s', [expected[i]]));
+	end;
+end;
+
+function HasDuplicates(const Arr: TStringArray): Boolean;
+var
+	Seen: specialize TDictionary<String, Boolean>;
+	Ext:  String;
+begin
+	Seen := specialize TDictionary<String, Boolean>.Create;
+	try
+		for Ext in Arr do
+		begin
+			if Seen.ContainsKey(Ext) then
+			begin
+				Exit(True);
+			end;
+			Seen.Add(Ext, True);
+		end;
+		Result := False;
+	finally
+		Seen.Free;
+	end;
+end;
+
+function CountExtension(const Extensions: TStringArray; const Ext: String): Integer;
+var
+	i: Integer;
+begin
+	Result := 0;
+	for i := Low(Extensions) to High(Extensions) do
+	begin
+		if Extensions[i] = Ext then
+		begin
+			Inc(Result);
+		end;
+	end;
+end;
+
+procedure TTestCommon.TestSetGetExtensions;
+var
+	original, updated: TStringArray;
+	testExtensions: TStringArray;
+	Ext: String;
+	builtinToNegate: String;
+begin
+	CheckEquals(0, GetExtensions(original), 'GetExtensions (original) failed');
+	CheckExtensionsContain(Self, original, ExpectedBuiltinExtensions);
+	CheckFalse(HasDuplicates(original), 'Original extensions have duplicates');
+
+	if Length(ExpectedBuiltinExtensions) = 0 then
+	begin
+		Fail('No builtin extensions to test negation with');
+	end;
+	builtinToNegate := ExpectedBuiltinExtensions[0];
+
+	testExtensions := ['foo',			 // user extension
+		'bar',			  // user extension
+		'bar',			  // duplicate user extension (expected to be removed)
+		'!' + builtinToNegate, // negation of builtin
+		'Üñïçødë',		 // unicode user extension
+		'naïve'			// unicode user extension
+		];
+
+	CheckEquals(0, SetExtensions(testExtensions), 'SetExtensions failed');
+	CheckEquals(0, GetExtensions(updated), 'GetExtensions (after set) failed');
+
+	for Ext in ExpectedBuiltinExtensions do
+	begin
+		if Ext = builtinToNegate then
+		begin
+			CheckFalse(HasExtension(updated, Ext), Format('Negated builtin "%s" still present', [Ext]));
+		end
+		else
+		begin
+			CheckTrue(HasExtension(updated, Ext), Format('Builtin extension "%s" missing after set', [Ext]));
+		end;
+	end;
+
+	CheckTrue(HasExtension(updated, 'foo'), 'User extension "foo" missing');
+	CheckTrue(HasExtension(updated, 'bar'), 'User extension "bar" missing');
+	CheckEquals(1, CountExtension(updated, 'bar'), 'User extension "bar" should appear only once');
+
+	CheckTrue(HasExtension(updated, 'Üñïçødë'), 'Unicode extension "Üñïçødë" missing');
+	CheckTrue(HasExtension(updated, 'naïve'), 'Unicode extension "naïve" missing');
+
+	testExtensions := ['foo', 'bar', '!foo'];
+	CheckEquals(0, SetExtensions(testExtensions), 'SetExtensions with negated user extension failed');
+	CheckEquals(0, GetExtensions(updated), 'GetExtensions after negated user ext failed');
+	CheckTrue(HasExtension(updated, 'foo'), 'User extension "foo" was wrongly removed by negation');
+
+	CheckFalse(HasDuplicates(updated), 'Extensions have duplicates after setting');
+
+	CheckEquals(0, SetExtensions([]), 'SetExtensions([]) failed');
+	CheckEquals(0, GetExtensions(updated), 'GetExtensions after reset failed');
+	CheckExtensionsContain(Self, updated, ExpectedBuiltinExtensions);
+	CheckFalse(HasDuplicates(updated), 'Extensions after reset have duplicates');
+
+	CheckEquals(0, SetExtensions(original), 'SetExtensions (restore original) failed');
 end;
 
 initialization
