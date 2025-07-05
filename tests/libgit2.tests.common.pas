@@ -432,69 +432,62 @@ begin
 	end;
 end;
 
-
 procedure TTestCommon.TestCacheObjectMaxSize;
 var
-	originalMaxSize, testMaxSize, actualMaxSize: ssize_t;
+	OriginalMaxSize, TestMaxSize, ActualMaxSize: ssize_t;
 	Success: Boolean;
 begin
-	originalMaxSize := GetCacheObjectMaxSize;
+	OriginalMaxSize := GetCacheObjectMaxSize;
+	TestMaxSize	  := 16 * 1024 * 1024; // 16 MB
 
-	testMaxSize := 16 * 1024 * 1024; // 16 MB
+	Success := TrySetCacheObjectMaxSize(TestMaxSize);
+	CheckTrue(Success, 'TrySetCacheObjectMaxSize failed');
 
-	Success := SetCacheObjectMaxSize(testMaxSize);
-	CheckTrue(Success, 'SetCacheObjectMaxSize failed');
+	ActualMaxSize := GetCacheObjectMaxSize;
+	CheckEquals(TestMaxSize, ActualMaxSize, 'TrySetCacheObjectMaxSize did not apply the expected value');
 
-	actualMaxSize := GetCacheObjectMaxSize;
-	CheckEquals(testMaxSize, actualMaxSize, 'Cache object max size was not set correctly');
-
-	Success := SetCacheObjectMaxSize(originalMaxSize);
+	Success := TrySetCacheObjectMaxSize(OriginalMaxSize);
 	CheckTrue(Success, 'Failed to restore original CacheObjectMaxSize');
 end;
 
 procedure TTestCommon.TestCacheObjectLimit;
 const
-	testLimit: size_t = 8 * 1024;
+	TestLimit: size_t = 8 * 1024;
 var
-	originalLimit, actualLimit: size_t;
-	Success:	Boolean;
-	objType:	TGitObjectType;
-	levelName: String;
-
-	function IsInvalidObjectType(const ObjectType: TGitObjectType): Boolean;
-	begin
-		Result := (ObjectType = TGitObjectType.Any) or (ObjectType = TGitObjectType.Invalid);
-	end;
-
+	OriginalLimit, ActualLimit: size_t;
+	Success:	 Boolean;
+	ObjectType: TGitObjectType;
+	ObjectName: String;
 begin
-
-	for objType := Low(TGitObjectType) to High(TGitObjectType) do
+	for ObjectType := Low(TGitObjectType) to High(TGitObjectType) do
 	begin
-		levelName := GetEnumName(TypeInfo(TGitObjectType), Ord(objType));
-		if IsInvalidObjectType(objType) then
+		ObjectName := GetEnumName(TypeInfo(TGitObjectType), Ord(ObjectType));
+
+		if not TryGetCacheObjectLimit(ObjectType, OriginalLimit) then
 		begin
-			Success := SetCacheObjectLimit(objType, testLimit);
+			Success := TrySetCacheObjectLimit(ObjectType, TestLimit);
 			CheckFalse(Success,
-				Format('SetCacheObjectLimit should fail for invalid object type %s', [levelName]));
+				Format('TrySetCacheObjectLimit should fail for invalid object type "%s"', [ObjectName]));
 		end
 		else
 		begin
-			originalLimit := GetCacheObjectLimit(objType);
-
-			Success := SetCacheObjectLimit(objType, testLimit);
+			Success := TrySetCacheObjectLimit(ObjectType, TestLimit);
 			CheckTrue(Success,
-				Format('SetCacheObjectLimit failed for valid object type %s', [levelName]));
+				Format('TrySetCacheObjectLimit failed for object type "%s"', [ObjectName]));
 
-			actualLimit := GetCacheObjectLimit(objType);
-			CheckEquals(testLimit, actualLimit,
-				Format('CacheObjectLimit was not set correctly for object type %s', [levelName]));
-
-			Success := SetCacheObjectLimit(objType, originalLimit);
+			Success := TryGetCacheObjectLimit(ObjectType, ActualLimit);
 			CheckTrue(Success,
-				Format('Failed to restore original CacheObjectLimit for object type %s', [levelName]));
+				Format('TryGetCacheObjectLimit failed after setting limit for type "%s"', [ObjectName]));
+			CheckEquals(TestLimit, ActualLimit,
+				Format('Object limit not set correctly for type "%s"', [ObjectName]));
+
+			Success := TrySetCacheObjectLimit(ObjectType, OriginalLimit);
+			CheckTrue(Success,
+				Format('Failed to restore original CacheObjectLimit for type "%s"', [ObjectName]));
 		end;
 	end;
 end;
+
 
 procedure TTestCommon.TestEnableCaching;
 begin
