@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fpdoc-descriptions><package name="libgit2_fp"><module name="LibGit2.Buffer"><element name="PGitBuf"><descr>Pointer to a <var>TGitBuf</var>.
+</descr>
+      </element><element name="TGitBuf"><descr><p>Sometimes libgit2 wants to return an allocated data buffer to the caller and have the caller take responsibility for freeing that memory. To make ownership clear in these cases, libgit2 uses <link id="TGitBuf"/> to return this data. Callers should use <link id="TGitBufHelper.Dispose"/> to release the memory when they are done.</p><p>A <var>TGitBuf</var> contains a pointer to a NUL-terminated C string, and the length of the string (not including the NUL terminator).</p>
+        </descr><short>A data buffer for exporting data from libgit2.</short>
+      </element><element name="TGitBuf.Ptr"><descr>The buffer contents. <link id="TGitBuf.Ptr">Ptr</link> points to the start of the buffer being returned. The buffer's length (in bytes) is specified by the <link id="TGitBuf.Size">Size</link> member of the structure, and contains a NUL terminator at position <var>Size + 1</var>.
+</descr>
+      </element><element name="TGitBuf.Reserved"><descr>This field is reserved and unused.
+</descr>
+      </element><element name="TGitBuf.Size"><descr>The length (in bytes) of the buffer pointed to by <link id="TGitBuf.Ptr">Ptr</link>, not including a NUL terminator.
+</descr>
+      </element><element name="TGitBufHelper"><descr>Provides utility methods for working with <link id="TGitBuf"/> buffers returned by libgit2 functions.
+</descr>
+      </element><element name="TGitBufHelper.Dispose"><short>Releases the buffer and resets its contents to default values.</short><descr>Calls <var>git_buf_dispose</var> to release any memory allocated by libgit2. After disposal, the buffer is cleared and safe to reuse.
+</descr>
+      </element><element name="TGitBufHelper.ToString"><short>Converts the contents of the buffer to a Pascal string.</short><descr>Returns a <var>String</var> containing the null-terminated contents of the buffer, or an empty string if <link id="TGitBuf.Ptr">Ptr</link> is <var>nil</var>.
+</descr>
+      </element><element name="TGitBufHelper.Length"><descr>Returns the length of the buffer in bytes.
+</descr>
+      </element><element name="TGitBufHelper.IsEmpty"><descr>Returns whether the buffer is empty.
+</descr>
+      </element><element name="TGitBufHelper.ToString.Result"><descr>A <var>String</var> containing the null-terminated contents of the buffer, or an empty string if <var>Ptr</var> is <var>nil</var>.
+
+</descr>
+      </element><element name="TGitBufHelper.Length.Result"><descr>The value of <link id="TGitBuf.Size">Size</link>, which indicates how many bytes are currently stored in the buffer.
+</descr>
+      </element><element name="TGitBufHelper.IsEmpty.Result"><descr><var>True</var> if <link id="TGitBuf.Ptr">Ptr</link> is <var>nil</var> or <link id="TGitBuf.Size">Size</link> is 0; otherwise, <var>False</var>.
+</descr>
+      </element><element name="Libgit2BufferDispose"><descr>Internal binding to the C function <var>git_buf_dispose</var>.
+</descr>
+      </element><element name="Libgit2BufferDispose.Buffer"><descr>The buffer to dispose.
+</descr>
+      </element>
+    </module>
+  </package>
+</fpdoc-descriptions>
