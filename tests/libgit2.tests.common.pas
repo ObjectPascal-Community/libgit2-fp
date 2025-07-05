@@ -31,41 +31,29 @@ type
 		{$ENDIF}
 		procedure TestCheckIfPrereleaseValid;
 		procedure TestGetFeatureBackends;
-
 		procedure TestCheckGetMaximumWindowSize;
 		procedure TestCheckGetMaximumWindowMappedLimit;
 		procedure TestCheckGetMaximumWindowFileLimit;
-
 		procedure TestCheckSetMaximumWindowSize;
 		procedure TestCheckSetMaximumWindowMappedLimit;
 		procedure TestCheckSetMaximumWindowFileLimit;
-
 		procedure TestGetSetResetSearchPath;
-
 		procedure TestCacheObjectMaxSize;
 		procedure TestCacheObjectLimit;
-
 		procedure TestEnableCaching;
 		procedure TestGetCachedMemory;
-
 		procedure TestTemplatePath;
-
 		procedure TestSetSSLCertLocations;
 		procedure TestAddSSLX509Cert;
-
 		procedure TestSetGetUserAgent;
 		procedure TestSetGetUserAgentUnicode;
-
 		procedure TestSetGetUserAgentProduct;
 		procedure TestSetGetUserAgentProductUnicode;
-
 		procedure TestAllFeatureToggles;
-
 		procedure TestSetGetPackMaxObjects;
-
 		procedure TestSetGetODBPriority;
-
 		procedure TestSetGetExtensions;
+      procedure TestSetGetOwnerValidation;
 	end;
 
 implementation
@@ -960,6 +948,27 @@ begin
 	CheckFalse(HasDuplicates(updated), 'Extensions after reset have duplicates');
 
 	CheckEquals(0, SetExtensions(original), 'SetExtensions (restore original) failed');
+end;
+
+procedure TTestCommon.TestSetGetOwnerValidation;
+var
+	original, current: Boolean;
+begin
+	original := GetOwnerValidation;
+
+	SetOwnerValidation(False);
+	current := GetOwnerValidation;
+	CheckFalse(current, 'OwnerValidation should be disabled');
+
+	SetOwnerValidation(True);
+	current := GetOwnerValidation;
+	CheckTrue(current, 'OwnerValidation should be enabled');
+
+	SetOwnerValidation(True);
+	CheckTrue(GetOwnerValidation, 'OwnerValidation should remain enabled');
+
+	SetOwnerValidation(original);
+	CheckEquals(original, GetOwnerValidation, 'OwnerValidation was not restored properly');
 end;
 
 initialization
