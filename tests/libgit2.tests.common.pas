@@ -742,6 +742,9 @@ begin
 	CheckEquals('git/2.0', getProduct, 'GetUserAgentProduct after empty string did not return default');
 end;
 
+
+
+procedure TTestCommon.TestAllFeatureToggles;
 type
 	TFeatureToggle = record
 		Name: String;
@@ -749,9 +752,6 @@ type
 		DisableProc: procedure;
 		IsEnabledFunc: function: Boolean;
 	end;
-
-
-procedure TTestCommon.TestAllFeatureToggles;
 const
 	FeatureToggles: array[0..7] of TFeatureToggle = (
 		(Name: 'StrictObjectCreation'; EnableProc: @EnableStrictObjectCreation; DisableProc: @DisableStrictObjectCreation;

@@ -757,6 +757,11 @@ begin
 	EnableStrictObjectCreationInternal(False);
 end;
 
+function IsStrictObjectCreationEnabled: Boolean;
+begin
+	Result := StrictObjectCreationEnabled;
+end;
+
 procedure EnableStrictSymbolicRefCreation;
 begin
 	EnableStrictSymbolicRefCreationInternal(True);
@@ -765,6 +770,11 @@ end;
 procedure DisableStrictSymbolicRefCreation;
 begin
 	EnableStrictSymbolicRefCreationInternal(False);
+end;
+
+function IsStrictSymbolicRefCreationEnabled: Boolean;
+begin
+	Result := StrictSymbolicRefCreationEnabled;
 end;
 
 procedure EnableOfsDelta;
@@ -777,6 +787,11 @@ begin
 	EnableOfsDeltaInternal(False);
 end;
 
+function IsOfsDeltaEnabled: Boolean;
+begin
+	Result := OfsDeltaEnabled;
+end;
+
 procedure EnableFSyncGitdir;
 begin
 	EnableFSyncGitdirInternal(True);
@@ -785,6 +800,11 @@ end;
 procedure DisableFSyncGitdir;
 begin
 	EnableFSyncGitdirInternal(False);
+end;
+
+function IsFSyncGitdirEnabled: Boolean;
+begin
+	Result := FSyncGitdirEnabled;
 end;
 
 procedure EnableStrictHashVerification;
@@ -797,6 +817,11 @@ begin
 	EnableStrictHashVerificationInternal(False);
 end;
 
+function IsStrictHashVerificationEnabled: Boolean;
+begin
+	Result := StrictHashVerificationEnabled;
+end;
+
 procedure EnableUnsavedIndexSafety;
 begin
 	EnableUnsavedIndexSafetyInternal(True);
@@ -805,6 +830,11 @@ end;
 procedure DisableUnsavedIndexSafety;
 begin
 	EnableUnsavedIndexSafetyInternal(False);
+end;
+
+function IsUnsavedIndexSafetyEnabled: Boolean;
+begin
+	Result := UnsavedIndexSafetyEnabled;
 end;
 
 procedure EnablePackKeepFileChecks;
@@ -817,6 +847,11 @@ begin
 	DisablePackKeepFileChecksInternal(True);
 end;
 
+function IsPackKeepFileChecksDisabled: Boolean;
+begin
+	Result := PackKeepFileChecksDisabled;
+end;
+
 procedure EnableHttpExpectContinue;
 begin
 	EnableHttpExpectContinueInternal(True);
@@ -827,48 +862,10 @@ begin
 	EnableHttpExpectContinueInternal(False);
 end;
 
-
-function IsStrictObjectCreationEnabled: Boolean;
-begin
-	Result := StrictObjectCreationEnabled;
-end;
-
-function IsStrictSymbolicRefCreationEnabled: Boolean;
-begin
-	Result := StrictSymbolicRefCreationEnabled;
-end;
-
-function IsOfsDeltaEnabled: Boolean;
-begin
-	Result := OfsDeltaEnabled;
-end;
-
-function IsFSyncGitdirEnabled: Boolean;
-begin
-	Result := FSyncGitdirEnabled;
-end;
-
-function IsStrictHashVerificationEnabled: Boolean;
-begin
-	Result := StrictHashVerificationEnabled;
-end;
-
-function IsUnsavedIndexSafetyEnabled: Boolean;
-begin
-	Result := UnsavedIndexSafetyEnabled;
-end;
-
-function IsPackKeepFileChecksDisabled: Boolean;
-begin
-	Result := PackKeepFileChecksDisabled;
-end;
-
 function IsHttpExpectContinueEnabled: Boolean;
 begin
 	Result := HttpExpectContinueEnabled;
 end;
-
-
 
 function GetPackMaxObjects: size_t;
 begin
