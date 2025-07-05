@@ -790,6 +790,8 @@ var
 	original, testValue, readBack: size_t;
 begin
 	original := GetPackMaxObjects;
+   CheckTrue(original <= UINT32_MAX, 'Pack max object limit is bigger than UINT32_MAX');
+   CheckTrue(original <> 0, 'Pack max object limit is zero');
 
 	testValue := 123456;
 	SetPackMaxObjects(testValue);
