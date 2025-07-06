@@ -421,7 +421,7 @@ begin
 		begin
 			if Buffer.Ptr <> nil then
 			begin
-				path := UTF8ToString(Utf8string(Buffer.Ptr));
+				path := Utf8string(Buffer.Ptr);
 			end
 			else
 			begin
@@ -543,7 +543,7 @@ begin
 		begin
 			if Buffer.Ptr <> nil then
 			begin
-				path := UTF8ToString(Ansistring(Buffer.Ptr));
+				path := Utf8string(Buffer.Ptr);
 			end
 			else
 			begin
@@ -614,7 +614,7 @@ begin
 	begin
 		if buf.Ptr <> nil then
 		begin
-			userAgent := UTF8ToString(Ansistring(buf.Ptr));
+			userAgent := Utf8string(buf.Ptr);
 		end
 		else
 		begin
@@ -654,7 +654,7 @@ begin
 	begin
 		if buf.Ptr <> nil then
 		begin
-			userAgentProduct := UTF8ToString(Ansistring(buf.Ptr));
+			userAgentProduct := Utf8string(buf.Ptr);
 		end
 		else
 		begin
@@ -1008,7 +1008,7 @@ begin
 		try
 			if (Buffer.Ptr <> nil) and (Buffer.size > 0) then
 			begin
-				path := UTF8ToString(Utf8string(Buffer.Ptr));
+				path := Utf8string(Buffer.Ptr);
 			end
 			else
 			begin

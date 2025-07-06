@@ -48,7 +48,7 @@ begin
 	SetLength(Result, Count);
 	for i := 0 to Count - 1 do
 	begin
-		Result[i] := UTF8ToString(Strings[i]);
+		Result[i] := Ansistring(UTF8ToString(Strings[i]));
 	end;
 end;
 
