@@ -9,14 +9,8 @@ interface
 
 uses
       LibGit2, LibGit2.Alloc, LibGit2.Buffer, LibGit2.Common, LibGit2.StdInt, LibGit2.StrArray, LibGit2.Version, 
-      LibGit2.Platform, LazarusPackageIntf;
+      LibGit2.Platform;
 
 implementation
 
-procedure Register;
-begin
-end;
-
-initialization
-  RegisterPackage('libgit2_fp', @Register);
 end.
